@@ -1,0 +1,199 @@
+/* Customização do AG Grid para Material UI Theme - Dark Mode MongoDB */
+
+.ag-theme-material,
+.ag-theme-material.ag-theme-dark {
+  /* Dimensões */
+  --ag-header-height: 56px;
+  --ag-row-height: 52px;
+  --ag-font-size: 14px;
+  --ag-font-family: Roboto, sans-serif;
+  
+  /* Cores do tema escuro MongoDB */
+  --ag-background-color: #2C2C2C !important;
+  --ag-foreground-color: rgba(255, 255, 255, 0.87) !important;
+  --ag-secondary-foreground-color: rgba(255, 255, 255, 0.6) !important;
+  --ag-disabled-foreground-color: rgba(255, 255, 255, 0.38) !important;
+  
+  /* Header */
+  --ag-header-background-color: #252525 !important;
+  --ag-header-foreground-color: rgba(255, 255, 255, 0.87) !important;
+  
+  /* Bordas */
+  --ag-border-color: rgba(255, 255, 255, 0.12) !important;
+  --ag-row-border-color: rgba(255, 255, 255, 0.08) !important;
+  
+  /* Linhas */
+  --ag-odd-row-background-color: #2C2C2C !important;
+  --ag-row-hover-color: rgba(0, 237, 100, 0.08) !important;
+  --ag-selected-row-background-color: rgba(0, 237, 100, 0.15) !important;
+  
+  /* Cores de destaque (verde MongoDB) */
+  --ag-alpine-active-color: #00ED64 !important;
+  --ag-checkbox-checked-color: #00ED64 !important;
+  --ag-range-selection-border-color: #00ED64 !important;
+  
+  /* Inputs e controles */
+  --ag-input-focus-border-color: #00ED64 !important;
+  --ag-input-border-color: rgba(255, 255, 255, 0.23) !important;
+  
+  /* Paginação */
+  --ag-control-panel-background-color: #252525 !important;
+  
+  /* Overlays */
+  --ag-modal-overlay-background-color: rgba(28, 28, 28, 0.66) !important;
+  
+  /* Forçar background e cor de texto */
+  background-color: #2C2C2C !important;
+  color: rgba(255, 255, 255, 0.87) !important;
+}
+
+/* Forçar background nos elementos principais */
+.ag-theme-material .ag-root-wrapper,
+.ag-theme-material .ag-root,
+.ag-theme-material .ag-body-viewport {
+  background-color: #2C2C2C !important;
+}
+
+.ag-theme-material .ag-center-cols-container,
+.ag-theme-material .ag-center-cols-viewport {
+  background-color: #2C2C2C !important;
+}
+
+.ag-theme-material .ag-row {
+  background-color: #2C2C2C !important;
+  color: rgba(255, 255, 255, 0.87) !important;
+}
+
+.ag-theme-material .ag-row-even {
+  background-color: #2C2C2C !important;
+}
+
+.ag-theme-material .ag-row-odd {
+  background-color: #282828 !important;
+}
+
+.ag-theme-material .ag-cell {
+  color: rgba(255, 255, 255, 0.87) !important;
+}
+
+/* Botões de ação aparecem apenas no hover */
+.ag-theme-material .action-buttons {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.ag-theme-material .ag-row:hover .action-buttons {
+  opacity: 1;
+}
+
+/* Hover na linha com cor MongoDB */
+.ag-theme-material .ag-row:hover {
+  background-color: rgba(0, 237, 100, 0.05) !important;
+}
+
+/* Header mais escuro */
+.ag-theme-material .ag-header {
+  border-bottom: 2px solid rgba(0, 237, 100, 0.3);
+}
+
+/* Paginação customizada */
+.ag-theme-material .ag-paging-panel {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: #252525;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.ag-theme-material .ag-paging-button {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.ag-theme-material .ag-paging-button:disabled {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+/* Filtros e menus */
+.ag-theme-material .ag-menu {
+  background-color: #2C2C2C;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.ag-theme-material .ag-filter-toolpanel-header,
+.ag-theme-material .ag-filter-toolpanel-search {
+  background-color: #252525;
+}
+
+/* Scrollbar customizada */
+.ag-theme-material ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.ag-theme-material ::-webkit-scrollbar-track {
+  background: #1E1E1E;
+}
+
+.ag-theme-material ::-webkit-scrollbar-thumb {
+  background: #464646;
+  border-radius: 4px;
+}
+
+.ag-theme-material ::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Classe adicional para forçar dark mode */
+.ag-theme-dark {
+  color-scheme: dark;
+}
+
+/* Cell editing */
+.ag-theme-material .ag-cell-inline-editing {
+  background-color: #363636;
+  border: 1px solid #00ED64;
+}
+
+/* Seleção de texto */
+.ag-theme-material .ag-cell-range-selected:not(.ag-cell-focus) {
+  background-color: rgba(0, 237, 100, 0.1);
+}
+
+/* Loading overlay */
+.ag-theme-material .ag-overlay-loading-wrapper {
+  background-color: rgba(44, 44, 44, 0.8);
+}
+
+/* No rows overlay */
+.ag-theme-material .ag-overlay-no-rows-wrapper {
+  background-color: #2C2C2C;
+}
+
+/* Inputs em filtros */
+.ag-theme-material input,
+.ag-theme-material select,
+.ag-theme-material textarea {
+  background-color: #363636;
+  color: rgba(255, 255, 255, 0.87);
+  border-color: rgba(255, 255, 255, 0.23);
+}
+
+.ag-theme-material input:focus,
+.ag-theme-material select:focus,
+.ag-theme-material textarea:focus {
+  border-color: #00ED64;
+  outline: none;
+}
+
+/* Menu de contexto */
+.ag-theme-material .ag-menu-option-active {
+  background-color: rgba(0, 237, 100, 0.1);
+}
+
+/* Ícones */
+.ag-theme-material .ag-icon {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.ag-theme-material .ag-icon:hover {
+  color: rgba(255, 255, 255, 0.87);
+}
+

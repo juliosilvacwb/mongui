@@ -1,8 +1,15 @@
 "use client";
 
-import { DataGrid, GridColDef, GridRowsProp } from "@mui/x-data-grid";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { AgGridReact } from "ag-grid-react";
+import { ColDef, ICellRendererParams, ModuleRegistry } from "ag-grid-community";
+import { AllCommunityModule } from "ag-grid-community";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-material.css";
 import { Box, Paper, Typography, Button, IconButton, Snackbar, Alert } from "@mui/material";
-import { useState, useEffect } from "react";
+
+// Registrar módulos do AG Grid Community
+ModuleRegistry.registerModules([AllCommunityModule]);
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -16,17 +23,15 @@ interface DocumentGridProps {
 }
 
 export default function DocumentGrid({ dbName, collectionName }: DocumentGridProps) {
-  const [rows, setRows] = useState<GridRowsProp>([]);
-  const [columns, setColumns] = useState<GridColDef[]>([]);
+  const [rowData, setRowData] = useState<any[]>([]);
+  const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [totalCount, setTotalCount] = useState<number>(0);
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 25,
-  });
+  const [paginationPageSize, setPaginationPageSize] = useState(25);
+  const [currentPage, setCurrentPage] = useState(0);
   const [isCustomQuery, setIsCustomQuery] = useState(false);
   const [snackbar, setSnackbar] = useState<{ 
     open: boolean; 
@@ -39,25 +44,20 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
   });
 
   useEffect(() => {
-    // Resetar paginação ao mudar de collection
-    setPaginationModel({ page: 0, pageSize: 25 });
+    setCurrentPage(0);
+    setPaginationPageSize(25);
     setIsCustomQuery(false);
-    fetchDocuments();
+    fetchDocuments(0, 25);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbName, collectionName]);
 
-  useEffect(() => {
-    if (!isCustomQuery) {
-      fetchDocuments();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paginationModel.page, paginationModel.pageSize]);
-
-  const fetchDocuments = async () => {
+  const fetchDocuments = async (page: number = currentPage, pageSize: number = paginationPageSize) => {
+    if (isCustomQuery) return; // Não buscar se estiver em modo query
+    
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/documents?db=${dbName}&collection=${collectionName}&page=${paginationModel.page}&pageSize=${paginationModel.pageSize}`
+        `/api/documents?db=${dbName}&collection=${collectionName}&page=${page}&pageSize=${pageSize}`
       );
       const result = await response.json();
 
@@ -67,77 +67,72 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
         if (result.data.length > 0) {
           // Gerar colunas dinamicamente baseado nas chaves do primeiro documento
           const firstDoc = result.data[0];
-        const generatedColumns: GridColDef[] = Object.keys(firstDoc).map((key) => ({
-          field: key,
-          headerName: key,
-          width: key === "_id" ? 220 : 150,
-          flex: key === "_id" ? 0 : 1,
-        }));
+          const generatedColumns: ColDef[] = Object.keys(firstDoc)
+            .filter(key => key !== 'id') // Remover campo id se existir
+            .map((key) => ({
+              field: key,
+              headerName: key,
+              sortable: true,
+              filter: true,
+              resizable: true,
+              width: key === "_id" ? 220 : 150,
+              flex: key === "_id" ? 0 : 1,
+            }));
 
-        // Adicionar coluna de ações no final (visível apenas no hover)
-        generatedColumns.push({
-          field: "actions",
-          headerName: "",
-          width: 100,
-          sortable: false,
-          filterable: false,
-          hideable: false,
-          disableColumnMenu: true,
-          renderCell: (params) => (
-            <Box 
-              sx={{ 
-                display: "flex", 
-                gap: 0.5,
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
-                opacity: 0,
-                transition: "opacity 0.2s",
-                ".MuiDataGrid-row:hover &": {
-                  opacity: 1,
-                },
-              }}
-            >
-              <IconButton
-                size="small"
-                onClick={() => handleEditRow(params.row)}
-                sx={{
-                  "&:hover": {
-                    backgroundColor: "primary.main",
-                    color: "primary.contrastText",
-                  },
-                }}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={() => handleDeleteRow(params.row)}
-                sx={{
-                  "&:hover": {
-                    backgroundColor: "error.main",
-                    color: "error.contrastText",
-                  },
-                }}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Box>
-          ),
-        });
+          // Adicionar coluna de ações
+          generatedColumns.push({
+            field: "actions",
+            headerName: "",
+            width: 100,
+            sortable: false,
+            filter: false,
+            resizable: false,
+            cellRenderer: (params: ICellRendererParams) => {
+              return (
+                <Box 
+                  sx={{ 
+                    display: "flex", 
+                    gap: 0.5,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                  }}
+                  className="action-buttons"
+                >
+                  <IconButton
+                    size="small"
+                    onClick={() => handleEditRow(params.data)}
+                    sx={{
+                      "&:hover": {
+                        backgroundColor: "primary.main",
+                        color: "primary.contrastText",
+                      },
+                    }}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleDeleteRow(params.data)}
+                    sx={{
+                      "&:hover": {
+                        backgroundColor: "error.main",
+                        color: "error.contrastText",
+                      },
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              );
+            },
+          });
 
-        setColumns(generatedColumns);
-
-        // Preparar dados para o grid (usar _id como id)
-        const gridRows = result.data.map((doc: any) => ({
-          ...doc,
-          id: doc._id,
-        }));
-
-        setRows(gridRows);
+          setColumnDefs(generatedColumns);
+          setRowData(result.data);
         } else {
-          setColumns([]);
-          setRows([]);
+          setColumnDefs([]);
+          setRowData([]);
         }
       }
     } catch (error) {
@@ -151,153 +146,6 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
     setModalMode("create");
     setSelectedRow(null);
     setModalOpen(true);
-  };
-
-  const handleQueryResult = (results: any[]) => {
-    // Marcar como query customizada (paginação client-side)
-    setIsCustomQuery(true);
-    setPaginationModel({ page: 0, pageSize: 25 });
-    setTotalCount(results.length);
-    
-    // Preparar dados para o grid
-    const gridRows = results.map((doc: any) => ({
-      ...doc,
-      id: doc._id,
-    }));
-    setRows(gridRows);
-
-    // Atualizar colunas se necessário
-    if (results.length > 0) {
-      const firstDoc = results[0];
-      const generatedColumns: GridColDef[] = Object.keys(firstDoc).map((key) => ({
-        field: key,
-        headerName: key,
-        width: key === "_id" ? 220 : 150,
-        flex: key === "_id" ? 0 : 1,
-      }));
-
-      // Adicionar coluna de ações no final
-      generatedColumns.push({
-        field: "actions",
-        headerName: "",
-        width: 100,
-        sortable: false,
-        filterable: false,
-        hideable: false,
-        disableColumnMenu: true,
-        renderCell: (params) => (
-          <Box 
-            sx={{ 
-              display: "flex", 
-              gap: 0.5,
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-              opacity: 0,
-              transition: "opacity 0.2s",
-              ".MuiDataGrid-row:hover &": {
-                opacity: 1,
-              },
-            }}
-          >
-            <IconButton
-              size="small"
-              onClick={() => handleEditRow(params.row)}
-              sx={{
-                "&:hover": {
-                  backgroundColor: "primary.main",
-                  color: "primary.contrastText",
-                },
-              }}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={async () => {
-                if (!confirm("Deseja realmente excluir este documento?")) return;
-                
-                try {
-                  const response = await fetch(
-                    `/api/documents?db=${dbName}&collection=${collectionName}&id=${params.row._id}`,
-                    { method: "DELETE" }
-                  );
-                  const result = await response.json();
-
-                  if (result.success) {
-                    setSnackbar({ open: true, message: "Documento excluído", severity: "success" });
-                    fetchDocuments();
-                  } else {
-                    throw new Error(result.error);
-                  }
-                } catch (error: any) {
-                  setSnackbar({ open: true, message: "Erro: " + error.message, severity: "error" });
-                }
-              }}
-              sx={{
-                "&:hover": {
-                  backgroundColor: "error.main",
-                  color: "error.contrastText",
-                },
-              }}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Box>
-        ),
-      });
-
-      setColumns(generatedColumns);
-    }
-  };
-
-  const handleSave = async (data: any) => {
-    try {
-      if (modalMode === "create") {
-        const response = await fetch("/api/documents", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            db: dbName,
-            collection: collectionName,
-            document: data,
-          }),
-        });
-        const result = await response.json();
-        if (result.success) {
-          // Detectar se foram criados múltiplos documentos
-          const count = result.data.insertedCount || 1;
-          const message = count > 1 
-            ? `${count} documentos criados` 
-            : "Documento criado";
-          setSnackbar({ open: true, message, severity: "success" });
-          setPaginationModel({ page: 0, pageSize: paginationModel.pageSize }); // Voltar para primeira página
-          fetchDocuments();
-        } else {
-          throw new Error(result.error);
-        }
-      } else {
-        const response = await fetch("/api/documents", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            db: dbName,
-            collection: collectionName,
-            id: selectedRow._id,
-            document: data,
-          }),
-        });
-        const result = await response.json();
-        if (result.success) {
-          setSnackbar({ open: true, message: "Documento atualizado", severity: "success" });
-          fetchDocuments();
-        } else {
-          throw new Error(result.error);
-        }
-      }
-    } catch (error: any) {
-      setSnackbar({ open: true, message: "Erro: " + error.message, severity: "error" });
-    }
   };
 
   const handleEditRow = (row: any) => {
@@ -318,7 +166,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
 
       if (result.success) {
         setSnackbar({ open: true, message: "Documento excluído", severity: "success" });
-        fetchDocuments();
+        fetchDocuments(currentPage, paginationPageSize);
       } else {
         throw new Error(result.error);
       }
@@ -327,12 +175,185 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
     }
   };
 
+  const handleQueryResult = (results: any[]) => {
+    setIsCustomQuery(true);
+    setCurrentPage(0);
+    setTotalCount(results.length);
+    
+    if (results.length > 0) {
+      const firstDoc = results[0];
+      const generatedColumns: ColDef[] = Object.keys(firstDoc)
+        .filter(key => key !== 'id')
+        .map((key) => ({
+          field: key,
+          headerName: key,
+          sortable: true,
+          filter: true,
+          resizable: true,
+          width: key === "_id" ? 220 : 150,
+          flex: key === "_id" ? 0 : 1,
+        }));
+
+      generatedColumns.push({
+        field: "actions",
+        headerName: "",
+        width: 100,
+        sortable: false,
+        filter: false,
+        resizable: false,
+        cellRenderer: (params: ICellRendererParams) => {
+          return (
+            <Box 
+              sx={{ 
+                display: "flex", 
+                gap: 0.5,
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+              }}
+              className="action-buttons"
+            >
+              <IconButton
+                size="small"
+                onClick={() => handleEditRow(params.data)}
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "primary.main",
+                    color: "primary.contrastText",
+                  },
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => handleDeleteRow(params.data)}
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "error.main",
+                    color: "error.contrastText",
+                  },
+                }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          );
+        },
+      });
+
+      setColumnDefs(generatedColumns);
+      setRowData(results);
+    }
+  };
+
+  const handleSave = async (data: any) => {
+    try {
+      if (modalMode === "create") {
+        const response = await fetch("/api/documents", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            db: dbName,
+            collection: collectionName,
+            document: data,
+          }),
+        });
+        const result = await response.json();
+        if (result.success) {
+          const count = result.data.insertedCount || 1;
+          const message = count > 1 
+            ? `${count} documentos criados` 
+            : "Documento criado";
+          setSnackbar({ open: true, message, severity: "success" });
+          setCurrentPage(0);
+          fetchDocuments(0, paginationPageSize);
+        } else {
+          throw new Error(result.error);
+        }
+      } else {
+        const response = await fetch("/api/documents", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            db: dbName,
+            collection: collectionName,
+            id: selectedRow._id,
+            document: data,
+          }),
+        });
+        const result = await response.json();
+        if (result.success) {
+          setSnackbar({ open: true, message: "Documento atualizado", severity: "success" });
+          fetchDocuments(currentPage, paginationPageSize);
+        } else {
+          throw new Error(result.error);
+        }
+      }
+    } catch (error: any) {
+      setSnackbar({ open: true, message: "Erro: " + error.message, severity: "error" });
+    }
+  };
+
+  const onPaginationChanged = useCallback((params: any) => {
+    const newPage = params.api.paginationGetCurrentPage();
+    const newPageSize = params.api.paginationGetPageSize();
+    
+    if (newPage !== currentPage || newPageSize !== paginationPageSize) {
+      setCurrentPage(newPage);
+      setPaginationPageSize(newPageSize);
+      
+      if (!isCustomQuery) {
+        fetchDocuments(newPage, newPageSize);
+      }
+    }
+    
+    // Customizar labels do seletor de pageSize
+    setTimeout(() => {
+      const selector = document.querySelector('.ag-paging-page-size-selector select');
+      if (selector) {
+        const options = selector.querySelectorAll('option');
+        options.forEach((option: any) => {
+          const value = parseInt(option.value);
+          if (value === 1000) option.textContent = '1K';
+          else if (value === 10000) option.textContent = '10K';
+          else if (value === 100000) option.textContent = '100K';
+        });
+      }
+    }, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, paginationPageSize, isCustomQuery]);
+
+  useEffect(() => {
+    // Customizar labels iniciais
+    const timer = setTimeout(() => {
+      const selector = document.querySelector('.ag-paging-page-size-selector select');
+      if (selector) {
+        const options = selector.querySelectorAll('option');
+        options.forEach((option: any) => {
+          const value = parseInt(option.value);
+          if (value === 1000) option.textContent = '1K';
+          else if (value === 10000) option.textContent = '10K';
+          else if (value === 100000) option.textContent = '100K';
+        });
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [rowData]);
+
+  const defaultColDef = useMemo<ColDef>(() => ({
+    sortable: true,
+    filter: true,
+    resizable: true,
+  }), []);
+
   return (
     <>
       <QueryPanel
         dbName={dbName}
         collectionName={collectionName}
-        pageSize={paginationModel.pageSize}
+        pageSize={paginationPageSize}
         onQueryResult={handleQueryResult}
       />
       
@@ -343,13 +364,13 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
               {dbName} → {collectionName}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {totalCount > 0 ? (
+              {!isCustomQuery && totalCount > 0 ? (
                 <>
-                  {paginationModel.page * paginationModel.pageSize + 1}-
-                  {Math.min((paginationModel.page + 1) * paginationModel.pageSize, totalCount)} de {totalCount} documento(s)
+                  {currentPage * paginationPageSize + 1}-
+                  {Math.min((currentPage + 1) * paginationPageSize, totalCount)} de {totalCount} documento(s)
                 </>
               ) : (
-                "0 documentos"
+                `${totalCount} documento(s)`
               )}
             </Typography>
           </Box>
@@ -363,8 +384,8 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
                 size="small" 
                 onClick={() => {
                   setIsCustomQuery(false);
-                  setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
-                  fetchDocuments();
+                  setCurrentPage(0);
+                  fetchDocuments(0, paginationPageSize);
                 }}
               >
                 Limpar Filtro
@@ -374,7 +395,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
               size="small" 
               onClick={() => {
                 setIsCustomQuery(false);
-                fetchDocuments();
+                fetchDocuments(currentPage, paginationPageSize);
               }}
             >
               <RefreshIcon />
@@ -382,29 +403,38 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
           </Box>
         </Box>
 
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          loading={loading}
-          rowCount={totalCount}
-          paginationMode={isCustomQuery ? "client" : "server"}
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[
-            { value: 25, label: "25" },
-            { value: 50, label: "50" },
-            { value: 100, label: "100" },
-            { value: 1000, label: "1K" },
-            { value: 10000, label: "10K" },
-            { value: 100000, label: "100K" },
-          ]}
-          sx={{
-            border: 0,
-            "& .MuiDataGrid-cell": {
-              fontSize: "0.875rem",
+        <Box 
+          className="ag-theme-material ag-theme-dark"
+          sx={{ 
+            height: "calc(100% - 80px)", 
+            width: "100%",
+            "& .action-buttons": {
+              opacity: 0,
+              transition: "opacity 0.2s",
+            },
+            "& .ag-row:hover .action-buttons": {
+              opacity: 1,
             },
           }}
-        />
+        >
+          <AgGridReact
+            rowData={rowData}
+            columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
+            pagination={!isCustomQuery}
+            paginationPageSize={paginationPageSize}
+            paginationPageSizeSelector={[25, 50, 100, 1000, 10000, 100000]}
+            suppressPaginationPanel={isCustomQuery}
+            loading={loading}
+            onPaginationChanged={onPaginationChanged}
+            domLayout="normal"
+            rowHeight={52}
+            headerHeight={56}
+            suppressRowClickSelection={true}
+            getRowId={(params) => params.data._id}
+            theme="legacy"
+          />
+        </Box>
       </Paper>
 
       <DocumentModal
