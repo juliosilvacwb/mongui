@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import WarningIcon from "@mui/icons-material/Warning";
+import { useTranslation } from "@/lib/i18n/TranslationContext";
 
 interface DeleteDatabaseModalProps {
   open: boolean;
@@ -28,6 +29,7 @@ export default function DeleteDatabaseModal({
   onClose,
   onSuccess,
 }: DeleteDatabaseModalProps) {
+  const { t } = useTranslation();
   const [confirmation, setConfirmation] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -79,7 +81,7 @@ export default function DeleteDatabaseModal({
       <DialogTitle>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <WarningIcon color="error" />
-          Deletar Database
+          {t.deleteDatabase.title}
         </Box>
       </DialogTitle>
       <DialogContent>
@@ -150,7 +152,7 @@ export default function DeleteDatabaseModal({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancelar
+          {t.deleteDatabase.cancel}
         </Button>
         <Button
           onClick={handleDelete}
@@ -159,7 +161,7 @@ export default function DeleteDatabaseModal({
           disabled={loading || !isConfirmationValid}
           startIcon={<DeleteIcon />}
         >
-          {loading ? "Deletando..." : "Deletar Database"}
+          {loading ? t.deleteDatabase.deleting : t.deleteDatabase.delete}
         </Button>
       </DialogActions>
     </Dialog>

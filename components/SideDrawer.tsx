@@ -23,6 +23,7 @@ import CreateDatabaseModal from "./CreateDatabaseModal";
 import CreateCollectionModal from "./CreateCollectionModal";
 import DeleteDatabaseModal from "./DeleteDatabaseModal";
 import DeleteCollectionModal from "./DeleteCollectionModal";
+import { useTranslation } from "@/lib/i18n/TranslationContext";
 
 const DRAWER_WIDTH = 280;
 
@@ -35,6 +36,7 @@ interface Database {
 export default function SideDrawer() {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useTranslation();
   const [databases, setDatabases] = useState<Database[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDbModalOpen, setCreateDbModalOpen] = useState(false);
@@ -91,7 +93,7 @@ export default function SideDrawer() {
   const handleDatabaseCreated = () => {
     setSnackbar({
       open: true,
-      message: "Database criado com sucesso!",
+      message: t.messages.databaseCreated,
       severity: "success",
     });
     fetchDatabases();
@@ -100,7 +102,7 @@ export default function SideDrawer() {
   const handleCollectionCreated = () => {
     setSnackbar({
       open: true,
-      message: "Collection criada com sucesso!",
+      message: t.messages.collectionCreated,
       severity: "success",
     });
     // Recarregar collections do database selecionado
@@ -124,7 +126,7 @@ export default function SideDrawer() {
   const handleDatabaseDeleted = () => {
     setSnackbar({
       open: true,
-      message: "Database deletado com sucesso!",
+      message: t.messages.databaseDeleted,
       severity: "success",
     });
     // Redirecionar para home se estava na página do database deletado
@@ -137,7 +139,7 @@ export default function SideDrawer() {
   const handleCollectionDeleted = () => {
     setSnackbar({
       open: true,
-      message: "Collection deletada com sucesso!",
+      message: t.messages.collectionDeleted,
       severity: "success",
     });
     // Redirecionar para home se estava na página da collection deletada
@@ -234,7 +236,7 @@ export default function SideDrawer() {
             textTransform: "none",
           }}
         >
-          Novo Database
+          {t.sidebar.newDatabase}
         </Button>
       </Box>
 
@@ -257,7 +259,7 @@ export default function SideDrawer() {
                   <StorageIcon />
                 </ListItemIcon>
                 <ListItemText primary={db.name} />
-                <Tooltip title="Deletar database">
+                <Tooltip title={t.sidebar.deleteDatabase}>
                   <IconButton
                     className="delete-db-btn"
                     size="small"
@@ -297,7 +299,7 @@ export default function SideDrawer() {
                       py: 0.5,
                     }}
                   >
-                    Nova Collection
+                    {t.sidebar.newCollection}
                   </Button>
                 </Box>
 
@@ -321,7 +323,7 @@ export default function SideDrawer() {
                         primary={collection} 
                         primaryTypographyProps={{ fontSize: "0.875rem" }}
                       />
-                      <Tooltip title="Deletar collection">
+                      <Tooltip title={t.sidebar.deleteCollection}>
                         <IconButton
                           className="delete-collection-btn"
                           size="small"
@@ -341,7 +343,7 @@ export default function SideDrawer() {
                   )) || (
                     <ListItemButton sx={{ pl: 4 }} disabled>
                       <ListItemText 
-                        primary="Sem collections" 
+                        primary={t.sidebar.noCollections}
                         primaryTypographyProps={{ fontSize: "0.875rem", fontStyle: "italic" }}
                       />
                     </ListItemButton>
@@ -354,7 +356,7 @@ export default function SideDrawer() {
           {databases.length === 0 && (
             <Box sx={{ p: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                Nenhum database encontrado
+                {t.sidebar.noDatabases}
               </Typography>
             </Box>
           )}

@@ -6,9 +6,11 @@ import AppBarTop from "@/components/AppBarTop";
 import SideDrawer from "@/components/SideDrawer";
 import Typography from "@mui/material/Typography";
 import { useThemeMode } from "@/components/ThemeRegistry";
+import { useTranslation } from "@/lib/i18n/TranslationContext";
 
 export default function Home() {
   const { toggleTheme, mode } = useThemeMode();
+  const { t } = useTranslation();
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -20,10 +22,10 @@ export default function Home() {
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
         <Typography variant="h5" gutterBottom>
-          Bem-vindo ao Mongui
+          {t.app.welcome}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Selecione um database e collection no menu lateral para começar.
+          {t.app.selectCollection}
         </Typography>
       </Box>
     </Box>

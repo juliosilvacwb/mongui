@@ -3,10 +3,11 @@ import "./globals.css";
 import "./ag-grid-custom.css";
 import ThemeRegistry from "@/components/ThemeRegistry";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { TranslationProvider } from "@/lib/i18n/TranslationContext";
 
 export const metadata: Metadata = {
-  title: "Mongui - Interface Web MongoDB",
-  description: "Interface web para gerenciar MongoDB",
+  title: "Mongui - MongoDB Web Interface",
+  description: "Modern web interface for MongoDB management",
 };
 
 export default function RootLayout({
@@ -15,10 +16,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR">
+    <html lang="en">
       <body>
         <ErrorBoundary>
-          <ThemeRegistry>{children}</ThemeRegistry>
+          <TranslationProvider>
+            <ThemeRegistry>{children}</ThemeRegistry>
+          </TranslationProvider>
         </ErrorBoundary>
       </body>
     </html>

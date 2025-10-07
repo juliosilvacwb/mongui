@@ -17,6 +17,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import InfoIcon from "@mui/icons-material/Info";
 import CloseIcon from "@mui/icons-material/Close";
 import QueryHelpModal from "./QueryHelpModal";
+import { useTranslation } from "@/lib/i18n/TranslationContext";
 
 interface QueryPanelProps {
   dbName: string;
@@ -31,6 +32,7 @@ export default function QueryPanel({
   pageSize,
   onQueryResult,
 }: QueryPanelProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [filter, setFilter] = useState("{}");
   const [sort, setSort] = useState("{}");
@@ -71,16 +73,16 @@ export default function QueryPanel({
       const result = await response.json();
 
       if (result.success) {
-        console.log("Query executada com sucesso:", result.data.length, "documentos");
+        console.log(t.messages.queryExecuted, result.data.length, t.documentGrid.documents);
         onQueryResult(result.data);
         setError(null);
       } else {
-        console.error("Erro na query:", result.error);
+        console.error(t.messages.errorExecutingQuery, result.error);
         setError(result.error);
       }
     } catch (err: any) {
-      console.error("Erro ao executar query:", err);
-      setError("Erro ao executar query: " + err.message);
+      console.error(t.messages.errorExecutingQuery, err);
+      setError(t.messages.errorExecutingQuery + " " + err.message);
     }
   };
 
@@ -99,13 +101,13 @@ export default function QueryPanel({
             sx={{ flex: 1, cursor: "pointer" }}
             onClick={() => setExpanded(!expanded)}
           >
-            <Typography variant="subtitle1">🔍 Consulta Avançada</Typography>
+            <Typography variant="subtitle1">🔍 {t.queryPanel.advancedQuery}</Typography>
             <Typography variant="caption" color="text.secondary">
-              Filtra TODA a collection no MongoDB
+              {t.queryPanel.filterEntireCollection}
             </Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 0.5 }}>
-            <Tooltip title="Ver guia de operadores e exemplos" arrow>
+            <Tooltip title={t.queryPanel.viewGuide} arrow>
               <IconButton 
                 size="small" 
                 onClick={(e) => {
@@ -127,7 +129,7 @@ export default function QueryPanel({
         <Box sx={{ p: 2, pt: 0 }}>
           <Box sx={{ display: "flex", gap: 2, mb: 1 }}>
             <TextField
-              label="Filtro (JSON)"
+              label={t.queryPanel.filter}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder='{ "idade": { "$gt": 25 } }'
@@ -137,7 +139,7 @@ export default function QueryPanel({
               sx={{ flex: 2 }}
             />
             <TextField
-              label="Ordenação (JSON)"
+              label={t.queryPanel.sort}
               value={sort}
               onChange={(e) => setSort(e.target.value)}
               placeholder='{ "idade": -1 }'
@@ -176,15 +178,15 @@ export default function QueryPanel({
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
-              <Box sx={{ fontWeight: "bold", mb: 0.5, pr: 3 }}>⚠️ Tipos de Dados:</Box>
+              <Box sx={{ fontWeight: "bold", mb: 0.5, pr: 3 }}>⚠️ {t.queryPanel.typesWarning}</Box>
               <Box sx={{ fontFamily: "monospace" }}>
-                ❌ {`{ "id": 123 }`} → número | ✅ {`{ "id": "123" }`} → string
+                {t.queryPanel.typesExample}
               </Box>
             </Box>
           )}
 
           <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-            💡 Limite: {pageSize >= 1000 ? `${pageSize / 1000}K` : pageSize} documento(s) por página (ajuste na paginação abaixo)
+            💡 {t.queryPanel.limit}: {pageSize >= 1000 ? `${pageSize / 1000}K` : pageSize} {t.queryPanel.documentsPerPage}
           </Typography>
 
           {error && (
@@ -199,7 +201,7 @@ export default function QueryPanel({
               startIcon={<SearchIcon />}
               onClick={handleQuery}
             >
-              Executar Query
+              {t.queryPanel.executeQuery}
             </Button>
           </Box>
         </Box>

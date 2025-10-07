@@ -21,6 +21,7 @@ A modern, feature-rich web interface for managing MongoDB databases - inspired b
 
 ### User Experience
 - 🌓 **Dark/Light Theme** - Seamless theme switching with persistence
+- 🌐 **Internationalization** - English (default) and Portuguese (Português) support
 - 🎨 **Modern UI** - Material UI components with custom MongoDB styling
 - ⚡ **High Performance** - AG Grid Community for blazing-fast data rendering
 - 🔄 **Real-time Validation** - Instant feedback on database/collection names
@@ -521,6 +522,26 @@ Theme preference is saved to `localStorage` and persists across sessions.
 - Smooth transitions
 - Dark/light mode adaptive
 
+### Language Support
+
+**Available Languages:**
+- 🇺🇸 **English** (Default)
+- 🇧🇷 **Português**
+
+**How to change language:**
+1. Click the **🌐 Language icon** in the top-right corner
+2. Select your preferred language from the menu
+3. The interface updates instantly
+4. Language preference is saved to `localStorage`
+
+**What's translated:**
+- All UI labels and buttons
+- Modal dialogs and confirmations
+- Messages and notifications
+- Error messages
+- Help text and tooltips
+- Query examples and documentation
+
 ---
 
 ## 🔍 Advanced Features
@@ -734,10 +755,11 @@ READ_ONLY=false  # or true for read-only production
 
 1. **MongoDB Atlas** - Managed MongoDB hosting
 2. **Vercel/Railway** - Deploy Next.js application
-3. **Enable READ_ONLY** - For public/untrusted access
-4. **Configure IP Whitelist** - Atlas security
-5. **Use SSL/TLS** - Always (included in `mongodb+srv://`)
-6. **Monitor Logs** - Set up error tracking (Sentry, LogRocket)
+3. **Set Default Language** - Configure in `TranslationContext.tsx` (line 35)
+4. **Enable READ_ONLY** - For public/untrusted access
+5. **Configure IP Whitelist** - Atlas security
+6. **Use SSL/TLS** - Always (included in `mongodb+srv://`)
+7. **Monitor Logs** - Set up error tracking (Sentry, LogRocket)
 
 ### Security Checklist
 
@@ -822,9 +844,10 @@ Contributions are welcome! To contribute:
 - [ ] Index management and visualization
 - [ ] Visual Aggregation Pipeline Builder
 - [ ] Persistent command history
-- [ ] JSON editor with syntax highlighting
+- [ ] JSON editor with syntax highlighting (Monaco Editor)
 - [ ] Offline mode with caching
 - [ ] Custom themes
+- [ ] More languages (Spanish, French, German, Chinese)
 - [ ] MongoDB Realm/Atlas Search support
 
 ---

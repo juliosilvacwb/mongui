@@ -14,6 +14,7 @@ import {
   Chip,
 } from "@mui/material";
 import StorageIcon from "@mui/icons-material/Storage";
+import { useTranslation } from "@/lib/i18n/TranslationContext";
 
 interface CreateDatabaseModalProps {
   open: boolean;
@@ -26,6 +27,7 @@ export default function CreateDatabaseModal({
   onClose,
   onSuccess,
 }: CreateDatabaseModalProps) {
+  const { t } = useTranslation();
   const [dbName, setDbName] = useState("");
   const [collectionName, setCollectionName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -147,7 +149,7 @@ export default function CreateDatabaseModal({
       <DialogTitle>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <StorageIcon color="primary" />
-          Criar Novo Database
+          {t.createDatabase.title}
         </Box>
       </DialogTitle>
       <DialogContent>
@@ -156,13 +158,13 @@ export default function CreateDatabaseModal({
           <TextField
             autoFocus
             fullWidth
-            label="Nome do Database"
+            label={t.createDatabase.databaseName}
             value={dbName}
             onChange={(e) => setDbName(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="exemplo: ecommerce"
+            placeholder={t.createDatabase.placeholder}
             error={!!currentDbError}
-            helperText={currentDbError || "Use apenas letras, números, _ ou -"}
+            helperText={currentDbError || t.createDatabase.useOnlyLetters}
             disabled={loading}
             sx={{
               mb: 2,
@@ -172,13 +174,13 @@ export default function CreateDatabaseModal({
           {/* Nome da Collection Inicial */}
           <TextField
             fullWidth
-            label="Nome da Collection Inicial"
+            label={t.createDatabase.collectionName}
             value={collectionName}
             onChange={(e) => setCollectionName(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="exemplo: produtos"
+            placeholder={t.createDatabase.collectionPlaceholder}
             error={!!currentCollectionError}
-            helperText={currentCollectionError || "Primeira collection do database"}
+            helperText={currentCollectionError || t.createDatabase.firstCollection}
             disabled={loading}
             sx={{
               mb: 2,
@@ -230,7 +232,7 @@ export default function CreateDatabaseModal({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancelar
+          {t.createDatabase.cancel}
         </Button>
         <Button
           onClick={handleCreate}
@@ -238,7 +240,7 @@ export default function CreateDatabaseModal({
           disabled={loading || !!currentDbError || !!currentCollectionError || !dbName || !collectionName}
           startIcon={<StorageIcon />}
         >
-          {loading ? "Criando..." : "Criar Database"}
+          {loading ? t.createDatabase.creating : t.createDatabase.create}
         </Button>
       </DialogActions>
     </Dialog>

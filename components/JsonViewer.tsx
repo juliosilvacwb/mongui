@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import CheckIcon from "@mui/icons-material/Check";
+import { useTranslation } from "@/lib/i18n/TranslationContext";
 
 interface JsonViewerProps {
   data: any[];
@@ -17,6 +18,7 @@ interface JsonViewerProps {
 }
 
 export default function JsonViewer({ data, title }: JsonViewerProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -73,11 +75,11 @@ export default function JsonViewer({ data, title }: JsonViewerProps) {
             </Typography>
           )}
           <Typography variant="body2" color="text.secondary">
-            {data.length} documento(s) • JSON Pretty Format
+            {data.length.toLocaleString()} {t.documentGrid.documents} • {t.documentGrid.jsonPrettyFormat}
           </Typography>
         </Box>
 
-        <Tooltip title={copied ? "Copiado!" : "Copiar todo JSON"}>
+        <Tooltip title={copied ? t.documentGrid.copied : t.documentGrid.copyJson}>
           <IconButton
             onClick={handleCopy}
             color={copied ? "success" : "default"}

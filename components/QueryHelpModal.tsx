@@ -11,6 +11,7 @@ import {
   Divider,
   Chip,
 } from "@mui/material";
+import { useTranslation } from "@/lib/i18n/TranslationContext";
 
 interface QueryHelpModalProps {
   open: boolean;
@@ -18,10 +19,12 @@ interface QueryHelpModalProps {
 }
 
 export default function QueryHelpModal({ open, onClose }: QueryHelpModalProps) {
+  const { t } = useTranslation();
+  
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        📚 Guia de Consultas MongoDB
+        📚 {t.queryHelp.title}
       </DialogTitle>
       <DialogContent>
         <Box sx={{ maxHeight: "60vh", overflow: "auto" }}>
@@ -36,10 +39,10 @@ export default function QueryHelpModal({ open, onClose }: QueryHelpModalProps) {
             }}
           >
             <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-              ⚠️ ATENÇÃO: Tipos de Dados
+              ⚠️ {t.queryHelp.dataTypesWarning}
             </Typography>
             <Typography variant="body2" sx={{ mb: 1 }}>
-              MongoDB diferencia tipos! Use aspas para strings:
+              {t.queryHelp.dataTypesInfo}
             </Typography>
             <Box sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>
               <Box sx={{ color: "error.light" }}>❌ {"{"}"id_coleta": 12345{"}"} → busca NÚMERO</Box>
@@ -49,7 +52,7 @@ export default function QueryHelpModal({ open, onClose }: QueryHelpModalProps) {
 
           {/* Operadores de Comparação */}
           <Typography variant="h6" gutterBottom sx={{ mt: 1 }}>
-            Operadores de Comparação
+            {t.queryHelp.comparisonOperators}
           </Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
             <Chip label="$eq" size="small" />
@@ -232,7 +235,7 @@ Ordenação: { "createdAt": -1 }`}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} variant="contained">
-          Entendi
+          {t.queryHelp.close}
         </Button>
       </DialogActions>
     </Dialog>

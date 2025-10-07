@@ -20,6 +20,7 @@ import DataObjectIcon from "@mui/icons-material/DataObject";
 import DocumentModal from "./DocumentModal";
 import QueryPanel from "./QueryPanel";
 import JsonViewer from "./JsonViewer";
+import { useTranslation } from "@/lib/i18n/TranslationContext";
 
 interface DocumentGridProps {
   dbName: string;
@@ -28,6 +29,7 @@ interface DocumentGridProps {
 
 export default function DocumentGrid({ dbName, collectionName }: DocumentGridProps) {
   const { mode } = useThemeMode();
+  const { t } = useTranslation();
   const [rowData, setRowData] = useState<any[]>([]);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const [loading, setLoading] = useState(true);
@@ -185,7 +187,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
       const result = await response.json();
 
       if (result.success) {
-        setSnackbar({ open: true, message: "Documento excluído", severity: "success" });
+        setSnackbar({ open: true, message: t.messages.documentDeleted, severity: "success" });
         fetchDocuments(currentPage, paginationPageSize);
       } else {
         throw new Error(result.error);
@@ -270,7 +272,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
       setColumnDefs([]);
       setSnackbar({ 
         open: true, 
-        message: "Nenhum documento encontrado com os filtros aplicados", 
+        message: t.messages.noDocumentsFound, 
         severity: "warning" as "success" | "error" | "info" | "warning"
       });
     }
@@ -293,7 +295,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
           const count = result.data.insertedCount || 1;
           const message = count > 1 
             ? `${count} documentos criados` 
-            : "Documento criado";
+            : t.messages.documentCreated;
           setSnackbar({ open: true, message, severity: "success" });
           setCurrentPage(0);
           fetchDocuments(0, paginationPageSize);
@@ -313,7 +315,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
         });
         const result = await response.json();
         if (result.success) {
-          setSnackbar({ open: true, message: "Documento atualizado", severity: "success" });
+          setSnackbar({ open: true, message: t.messages.documentUpdated, severity: "success" });
           fetchDocuments(currentPage, paginationPageSize);
         } else {
           throw new Error(result.error);
@@ -443,20 +445,20 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
               <Typography variant="body2" color="text.secondary">
                 {!isCustomQuery && totalCount > 0 ? (
                   <>
-                    {currentPage * paginationPageSize + 1}-
-                    {Math.min((currentPage + 1) * paginationPageSize, totalCount)} de {totalCount} documento(s)
+                    {t.documentGrid.showing} {currentPage * paginationPageSize + 1}-
+                    {Math.min((currentPage + 1) * paginationPageSize, totalCount)} {t.documentGrid.of} {totalCount.toLocaleString()} {t.documentGrid.documents}
                   </>
                 ) : (
-                  `${totalCount} documento(s)`
+                  `${totalCount.toLocaleString()} ${t.documentGrid.documents}`
                 )}
               </Typography>
               {!isCustomQuery && (
                 <Tooltip 
-                  title="Click nas células ou headers para copiar valores para área de transferência"
+                  title={t.documentGrid.clickToCopyTooltip}
                   arrow
                 >
                   <Chip 
-                    label="Click = Copiar" 
+                    label={t.documentGrid.clickToCopy}
                     size="small" 
                     variant="outlined"
                     color="info"
@@ -487,18 +489,18 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
             >
               <ToggleButton value="grid" aria-label="visualização em tabela">
                 <TableRowsIcon sx={{ mr: 0.5, fontSize: "1.2rem" }} />
-                Tabela
+                {t.documentGrid.table}
               </ToggleButton>
               <ToggleButton value="json" aria-label="visualização em JSON">
                 <DataObjectIcon sx={{ mr: 0.5, fontSize: "1.2rem" }} />
-                JSON
+                {t.documentGrid.json}
               </ToggleButton>
             </ToggleButtonGroup>
 
             {/* Action Buttons */}
             <Box sx={{ display: "flex", gap: 1 }}>
               <Button startIcon={<AddIcon />} variant="contained" size="small" onClick={handleCreate}>
-                Novo
+                {t.documentGrid.new}
               </Button>
               {isCustomQuery && (
                 <Button 
@@ -510,7 +512,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
                     fetchDocuments(0, paginationPageSize);
                   }}
                 >
-                  Limpar Filtro
+                  {t.documentGrid.clearFilter}
                 </Button>
               )}
               <IconButton 
@@ -555,7 +557,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
               onColumnHeaderClicked={(params: any) => {
                 const colId = params.column?.getColId ? params.column.getColId() : null;
                 if (colId && colId !== "actions") {
-                  copyToClipboard(colId, "Nome do campo");
+                  copyToClipboard(colId, t.messages.fieldName);
                 }
               }}
               domLayout="normal"
