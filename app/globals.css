@@ -287,6 +287,52 @@ pre {
 }
 
 /* ========================================
+   JSON SYNTAX HIGHLIGHTING
+   ======================================== */
+
+.json-key {
+  color: #4EC9B0;
+  font-weight: 500;
+}
+
+@media (prefers-color-scheme: light) {
+  .json-key {
+    color: #0451A5;
+  }
+}
+
+.json-string {
+  color: #CE9178;
+}
+
+@media (prefers-color-scheme: light) {
+  .json-string {
+    color: #A31515;
+  }
+}
+
+.json-number {
+  color: #B5CEA8;
+}
+
+@media (prefers-color-scheme: light) {
+  .json-number {
+    color: #098658;
+  }
+}
+
+.json-boolean {
+  color: #569CD6;
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: light) {
+  .json-boolean {
+    color: #0000FF;
+  }
+}
+
+/* ========================================
    PRINT STYLES
    ======================================== */
 

@@ -6,7 +6,7 @@ import { ColDef, ICellRendererParams, ModuleRegistry } from "ag-grid-community";
 import { AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-material.css";
-import { Box, Paper, Typography, Button, IconButton, Snackbar, Alert, Chip, Tooltip, Collapse } from "@mui/material";
+import { Box, Paper, Typography, Button, IconButton, Snackbar, Alert, Chip, Tooltip, Collapse, ToggleButtonGroup, ToggleButton } from "@mui/material";
 import { useThemeMode } from "./ThemeRegistry";
 
 // Registrar módulos do AG Grid Community
@@ -15,8 +15,11 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import TableRowsIcon from "@mui/icons-material/TableRows";
+import DataObjectIcon from "@mui/icons-material/DataObject";
 import DocumentModal from "./DocumentModal";
 import QueryPanel from "./QueryPanel";
+import JsonViewer from "./JsonViewer";
 
 interface DocumentGridProps {
   dbName: string;
@@ -36,6 +39,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
   const [currentPage, setCurrentPage] = useState(0);
   const [isCustomQuery, setIsCustomQuery] = useState(false);
   const [showFilterAlert, setShowFilterAlert] = useState(true);
+  const [viewMode, setViewMode] = useState<"grid" | "json">("grid");
   const [snackbar, setSnackbar] = useState<{ 
     open: boolean; 
     message: string; 
@@ -462,73 +466,114 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
               )}
             </Box>
           </Box>
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Button startIcon={<AddIcon />} variant="contained" size="small" onClick={handleCreate}>
-              Novo
-            </Button>
-            {isCustomQuery && (
-              <Button 
-                variant="outlined" 
+          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+            {/* Toggle View Mode */}
+            <ToggleButtonGroup
+              value={viewMode}
+              exclusive
+              onChange={(e, newMode) => {
+                if (newMode !== null) {
+                  setViewMode(newMode);
+                }
+              }}
+              size="small"
+              sx={{
+                "& .MuiToggleButton-root": {
+                  px: 2,
+                  py: 0.5,
+                  textTransform: "none",
+                },
+              }}
+            >
+              <ToggleButton value="grid" aria-label="visualização em tabela">
+                <TableRowsIcon sx={{ mr: 0.5, fontSize: "1.2rem" }} />
+                Tabela
+              </ToggleButton>
+              <ToggleButton value="json" aria-label="visualização em JSON">
+                <DataObjectIcon sx={{ mr: 0.5, fontSize: "1.2rem" }} />
+                JSON
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {/* Action Buttons */}
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button startIcon={<AddIcon />} variant="contained" size="small" onClick={handleCreate}>
+                Novo
+              </Button>
+              {isCustomQuery && (
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  onClick={() => {
+                    setIsCustomQuery(false);
+                    setCurrentPage(0);
+                    fetchDocuments(0, paginationPageSize);
+                  }}
+                >
+                  Limpar Filtro
+                </Button>
+              )}
+              <IconButton 
                 size="small" 
                 onClick={() => {
                   setIsCustomQuery(false);
-                  setCurrentPage(0);
-                  fetchDocuments(0, paginationPageSize);
+                  fetchDocuments(currentPage, paginationPageSize);
                 }}
               >
-                Limpar Filtro
-              </Button>
-            )}
-            <IconButton 
-              size="small" 
-              onClick={() => {
-                setIsCustomQuery(false);
-                fetchDocuments(currentPage, paginationPageSize);
-              }}
-            >
-              <RefreshIcon />
-            </IconButton>
+                <RefreshIcon />
+              </IconButton>
+            </Box>
           </Box>
         </Box>
 
-        <Box 
-          className={`ag-theme-material ${mode === "dark" ? "ag-theme-dark" : "ag-theme-light"}`}
-          sx={{ 
-            height: "calc(100% - 80px)", 
-            width: "100%",
-            "& .action-buttons": {
-              opacity: 0,
-              transition: "opacity 0.2s",
-            },
-            "& .ag-row:hover .action-buttons": {
-              opacity: 1,
-            },
-          }}
-        >
-          <AgGridReact
-            rowData={rowData}
-            columnDefs={columnDefs}
-            defaultColDef={defaultColDef}
-            pagination={!isCustomQuery}
-            paginationPageSize={paginationPageSize}
-            paginationPageSizeSelector={[25, 50, 100, 1000, 10000, 100000]}
-            suppressPaginationPanel={isCustomQuery}
-            loading={loading}
-            onPaginationChanged={onPaginationChanged}
-            onColumnHeaderClicked={(params: any) => {
-              const colId = params.column?.getColId ? params.column.getColId() : null;
-              if (colId && colId !== "actions") {
-                copyToClipboard(colId, "Nome do campo");
-              }
+        {/* Conditional Rendering: Grid or JSON View */}
+        {viewMode === "grid" ? (
+          <Box 
+            className={`ag-theme-material ${mode === "dark" ? "ag-theme-dark" : "ag-theme-light"}`}
+            sx={{ 
+              height: "calc(100% - 80px)", 
+              width: "100%",
+              "& .action-buttons": {
+                opacity: 0,
+                transition: "opacity 0.2s",
+              },
+              "& .ag-row:hover .action-buttons": {
+                opacity: 1,
+              },
             }}
-            domLayout="normal"
-            rowHeight={52}
-            headerHeight={56}
-            suppressRowClickSelection={true}
-            getRowId={(params) => params.data._id}
-            theme="legacy"
-          />
-        </Box>
+          >
+            <AgGridReact
+              rowData={rowData}
+              columnDefs={columnDefs}
+              defaultColDef={defaultColDef}
+              pagination={!isCustomQuery}
+              paginationPageSize={paginationPageSize}
+              paginationPageSizeSelector={[25, 50, 100, 1000, 10000, 100000]}
+              suppressPaginationPanel={isCustomQuery}
+              loading={loading}
+              onPaginationChanged={onPaginationChanged}
+              onColumnHeaderClicked={(params: any) => {
+                const colId = params.column?.getColId ? params.column.getColId() : null;
+                if (colId && colId !== "actions") {
+                  copyToClipboard(colId, "Nome do campo");
+                }
+              }}
+              domLayout="normal"
+              rowHeight={52}
+              headerHeight={56}
+              suppressRowClickSelection={true}
+              getRowId={(params) => params.data._id}
+              theme="legacy"
+            />
+          </Box>
+        ) : (
+          <Box sx={{ height: "calc(100% - 80px)", width: "100%", overflow: "auto" }}>
+            <JsonViewer 
+              data={rowData} 
+              title={`${dbName} → ${collectionName}`}
+            />
+          </Box>
+        )}
       </Paper>
 
       <DocumentModal
