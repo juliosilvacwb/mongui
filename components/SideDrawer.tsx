@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import Drawer from "@mui/material/Drawer";
 import Toolbar from "@mui/material/Toolbar";
 import Box from "@mui/material/Box";
@@ -25,9 +26,10 @@ interface Database {
 }
 
 export default function SideDrawer() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [databases, setDatabases] = useState<Database[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDatabases();
@@ -85,9 +87,8 @@ export default function SideDrawer() {
   };
 
   const handleCollectionClick = (dbName: string, collectionName: string) => {
-    setSelectedCollection(`${dbName}/${collectionName}`);
-    // Navegar para a rota dinâmica
-    window.location.href = `/${dbName}/${collectionName}`;
+    // Navegar usando Next.js router (client-side navigation)
+    router.push(`/${dbName}/${collectionName}`);
   };
 
   if (loading) {
@@ -142,7 +143,7 @@ export default function SideDrawer() {
                     <ListItemButton
                       key={collection}
                       sx={{ pl: 4 }}
-                      selected={selectedCollection === `${db.name}/${collection}`}
+                      selected={pathname === `/${db.name}/${collection}`}
                       onClick={() => handleCollectionClick(db.name, collection)}
                     >
                       <ListItemIcon>
