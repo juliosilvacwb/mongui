@@ -16,6 +16,10 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import DescriptionIcon from "@mui/icons-material/Description";
 import Typography from "@mui/material/Typography";
+import { Button, Divider, Snackbar, Alert } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import CreateDatabaseModal from "./CreateDatabaseModal";
+import CreateCollectionModal from "./CreateCollectionModal";
 
 const DRAWER_WIDTH = 280;
 
@@ -30,6 +34,18 @@ export default function SideDrawer() {
   const pathname = usePathname();
   const [databases, setDatabases] = useState<Database[]>([]);
   const [loading, setLoading] = useState(true);
+  const [createDbModalOpen, setCreateDbModalOpen] = useState(false);
+  const [createCollectionModalOpen, setCreateCollectionModalOpen] = useState(false);
+  const [selectedDbForCollection, setSelectedDbForCollection] = useState<string>("");
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   useEffect(() => {
     fetchDatabases();
@@ -50,6 +66,36 @@ export default function SideDrawer() {
       console.error("Erro ao buscar databases:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateDatabase = () => {
+    setCreateDbModalOpen(true);
+  };
+
+  const handleCreateCollection = (dbName: string) => {
+    setSelectedDbForCollection(dbName);
+    setCreateCollectionModalOpen(true);
+  };
+
+  const handleDatabaseCreated = () => {
+    setSnackbar({
+      open: true,
+      message: "Database criado com sucesso!",
+      severity: "success",
+    });
+    fetchDatabases();
+  };
+
+  const handleCollectionCreated = () => {
+    setSnackbar({
+      open: true,
+      message: "Collection criada com sucesso!",
+      severity: "success",
+    });
+    // Recarregar collections do database selecionado
+    if (selectedDbForCollection) {
+      handleDatabaseClick(selectedDbForCollection);
     }
   };
 
@@ -125,10 +171,31 @@ export default function SideDrawer() {
       }}
     >
       <Toolbar />
-      <Box sx={{ overflow: "auto" }}>
+      
+      {/* Botão Criar Database */}
+      <Box sx={{ p: 2, pb: 1 }}>
+        <Button
+          fullWidth
+          variant="outlined"
+          startIcon={<AddIcon />}
+          onClick={handleCreateDatabase}
+          size="small"
+          sx={{
+            justifyContent: "flex-start",
+            textTransform: "none",
+          }}
+        >
+          Novo Database
+        </Button>
+      </Box>
+
+      <Divider />
+
+      <Box sx={{ overflow: "auto", flexGrow: 1 }}>
         <List>
           {databases.map((db) => (
             <div key={db.name}>
+              {/* Database Item */}
               <ListItemButton onClick={() => handleDatabaseClick(db.name)}>
                 <ListItemIcon>
                   <StorageIcon />
@@ -137,7 +204,30 @@ export default function SideDrawer() {
                 {db.expanded ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
 
+              {/* Collections List */}
               <Collapse in={db.expanded} timeout="auto" unmountOnExit>
+                {/* Botão Criar Collection */}
+                <Box sx={{ pl: 4, pr: 2, pt: 1, pb: 0.5 }}>
+                  <Button
+                    fullWidth
+                    size="small"
+                    variant="text"
+                    startIcon={<AddIcon />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCreateCollection(db.name);
+                    }}
+                    sx={{
+                      justifyContent: "flex-start",
+                      textTransform: "none",
+                      fontSize: "0.8rem",
+                      py: 0.5,
+                    }}
+                  >
+                    Nova Collection
+                  </Button>
+                </Box>
+
                 <List component="div" disablePadding>
                   {db.collections?.map((collection) => (
                     <ListItemButton
@@ -176,6 +266,30 @@ export default function SideDrawer() {
           )}
         </List>
       </Box>
+
+      {/* Modals */}
+      <CreateDatabaseModal
+        open={createDbModalOpen}
+        onClose={() => setCreateDbModalOpen(false)}
+        onSuccess={handleDatabaseCreated}
+      />
+
+      <CreateCollectionModal
+        open={createCollectionModalOpen}
+        dbName={selectedDbForCollection}
+        onClose={() => setCreateCollectionModalOpen(false)}
+        onSuccess={handleCollectionCreated}
+      />
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+      >
+        <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
+      </Snackbar>
     </Drawer>
   );
 }
