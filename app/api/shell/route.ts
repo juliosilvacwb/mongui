@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
+import { isReadOnly } from "@/lib/env";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   try {
@@ -117,6 +119,16 @@ async function executeOperation(
   operation: string,
   argsStr: string
 ): Promise<any> {
+  // Verificar read-only para operações de escrita
+  const writeOperations = ["insertOne", "insertMany", "updateOne", "updateMany", "deleteOne", "deleteMany"];
+  if (isReadOnly() && writeOperations.includes(operation)) {
+    throw new Error(
+      `Operação '${operation}' não permitida.\n\n` +
+      "Aplicação em modo somente leitura (READ_ONLY=true).\n" +
+      "Apenas operações de leitura são permitidas: find, findOne, countDocuments, distinct"
+    );
+  }
+
   const collection = db.collection(collectionName);
 
   // Parse argumentos

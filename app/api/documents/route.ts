@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
+import { isReadOnly } from "@/lib/env";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
   try {
@@ -55,6 +57,19 @@ export async function GET(request: Request) {
 
 // POST - Criar novo documento(s)
 export async function POST(request: Request) {
+  // Verificar modo read-only
+  if (isReadOnly()) {
+    logger.warn("Tentativa de criar documento em modo read-only");
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Aplicação em modo somente leitura (READ_ONLY=true). Operações de escrita não são permitidas.",
+      },
+      { status: 403 }
+    );
+  }
+
+  const startTime = Date.now();
   try {
     const body = await request.json();
     const { db: dbName, collection: collectionName, document } = body;
@@ -102,6 +117,19 @@ export async function POST(request: Request) {
 
 // PUT - Atualizar documento
 export async function PUT(request: Request) {
+  // Verificar modo read-only
+  if (isReadOnly()) {
+    logger.warn("Tentativa de atualizar documento em modo read-only");
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Aplicação em modo somente leitura (READ_ONLY=true). Operações de escrita não são permitidas.",
+      },
+      { status: 403 }
+    );
+  }
+
+  const startTime = Date.now();
   try {
     const body = await request.json();
     const { db: dbName, collection: collectionName, id, document } = body;
@@ -142,6 +170,19 @@ export async function PUT(request: Request) {
 
 // DELETE - Remover documento
 export async function DELETE(request: Request) {
+  // Verificar modo read-only
+  if (isReadOnly()) {
+    logger.warn("Tentativa de deletar documento em modo read-only");
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Aplicação em modo somente leitura (READ_ONLY=true). Operações de escrita não são permitidas.",
+      },
+      { status: 403 }
+    );
+  }
+
+  const startTime = Date.now();
   try {
     const { searchParams } = new URL(request.url);
     const dbName = searchParams.get("db");

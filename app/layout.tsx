@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./ag-grid-custom.css";
 import ThemeRegistry from "@/components/ThemeRegistry";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: "Mongo UI - MongoDB Web Interface",
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body>
-        <ThemeRegistry>{children}</ThemeRegistry>
+        <ErrorBoundary>
+          <ThemeRegistry>{children}</ThemeRegistry>
+        </ErrorBoundary>
       </body>
     </html>
   );
