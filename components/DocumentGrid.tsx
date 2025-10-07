@@ -39,7 +39,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
   const [snackbar, setSnackbar] = useState<{ 
     open: boolean; 
     message: string; 
-    severity: "success" | "error" 
+    severity: "success" | "error" | "info" | "warning"
   }>({
     open: false,
     message: "",
@@ -260,6 +260,15 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
 
       setColumnDefs(generatedColumns);
       setRowData(results);
+    } else {
+      // Quando query retorna vazio, limpar dados e mostrar mensagem
+      setRowData([]);
+      setColumnDefs([]);
+      setSnackbar({ 
+        open: true, 
+        message: "Nenhum documento encontrado com os filtros aplicados", 
+        severity: "warning" as "success" | "error" | "info" | "warning"
+      });
     }
   };
 
@@ -506,9 +515,10 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
             suppressPaginationPanel={isCustomQuery}
             loading={loading}
             onPaginationChanged={onPaginationChanged}
-            onColumnHeaderClicked={(params) => {
-              if (params.column.getColId() !== "actions") {
-                copyToClipboard(params.column.getColId(), "Nome do campo");
+            onColumnHeaderClicked={(params: any) => {
+              const colId = params.column?.getColId ? params.column.getColId() : null;
+              if (colId && colId !== "actions") {
+                copyToClipboard(colId, "Nome do campo");
               }
             }}
             domLayout="normal"

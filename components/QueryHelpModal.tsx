@@ -25,6 +25,28 @@ export default function QueryHelpModal({ open, onClose }: QueryHelpModalProps) {
       </DialogTitle>
       <DialogContent>
         <Box sx={{ maxHeight: "60vh", overflow: "auto" }}>
+          {/* ATENÇÃO: Tipos de Dados */}
+          <Box 
+            sx={{ 
+              bgcolor: "warning.main", 
+              color: "warning.contrastText", 
+              p: 2, 
+              borderRadius: 1, 
+              mb: 2 
+            }}
+          >
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+              ⚠️ ATENÇÃO: Tipos de Dados
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              MongoDB diferencia tipos! Use aspas para strings:
+            </Typography>
+            <Box sx={{ fontFamily: "monospace", fontSize: "0.85rem" }}>
+              <Box sx={{ color: "error.light" }}>❌ {"{"}"id_coleta": 12345{"}"} → busca NÚMERO</Box>
+              <Box sx={{ color: "success.light" }}>✅ {"{"}"id_coleta": "12345"{"}"} → busca STRING</Box>
+            </Box>
+          </Box>
+
           {/* Operadores de Comparação */}
           <Typography variant="h6" gutterBottom sx={{ mt: 1 }}>
             Operadores de Comparação

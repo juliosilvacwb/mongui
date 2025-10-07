@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -15,6 +15,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import InfoIcon from "@mui/icons-material/Info";
+import CloseIcon from "@mui/icons-material/Close";
 import QueryHelpModal from "./QueryHelpModal";
 
 interface QueryPanelProps {
@@ -35,6 +36,20 @@ export default function QueryPanel({
   const [sort, setSort] = useState("{}");
   const [error, setError] = useState<string | null>(null);
   const [helpModalOpen, setHelpModalOpen] = useState(false);
+  const [showTypeAlert, setShowTypeAlert] = useState(true);
+
+  // Verificar se o usuário já fechou o alerta antes
+  useEffect(() => {
+    const alertDismissed = localStorage.getItem('mongui-type-alert-dismissed');
+    if (alertDismissed === 'true') {
+      setShowTypeAlert(false);
+    }
+  }, []);
+
+  const handleCloseTypeAlert = () => {
+    setShowTypeAlert(false);
+    localStorage.setItem('mongui-type-alert-dismissed', 'true');
+  };
 
   const handleQuery = async () => {
     try {
@@ -56,12 +71,15 @@ export default function QueryPanel({
       const result = await response.json();
 
       if (result.success) {
+        console.log("Query executada com sucesso:", result.data.length, "documentos");
         onQueryResult(result.data);
         setError(null);
       } else {
+        console.error("Erro na query:", result.error);
         setError(result.error);
       }
     } catch (err: any) {
+      console.error("Erro ao executar query:", err);
       setError("Erro ao executar query: " + err.message);
     }
   };
@@ -130,6 +148,41 @@ export default function QueryPanel({
             />
           </Box>
           
+          {showTypeAlert && (
+            <Box 
+              sx={{ 
+                mt: 1.5, 
+                p: 1.5, 
+                bgcolor: "warning.main", 
+                color: "warning.contrastText", 
+                borderRadius: 1,
+                fontSize: "0.8rem",
+                position: "relative"
+              }}
+            >
+              <IconButton
+                size="small"
+                onClick={handleCloseTypeAlert}
+                sx={{
+                  position: "absolute",
+                  top: 4,
+                  right: 4,
+                  color: "warning.contrastText",
+                  padding: "2px",
+                  "&:hover": {
+                    bgcolor: "rgba(0, 0, 0, 0.1)"
+                  }
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+              <Box sx={{ fontWeight: "bold", mb: 0.5, pr: 3 }}>⚠️ Tipos de Dados:</Box>
+              <Box sx={{ fontFamily: "monospace" }}>
+                ❌ {`{ "id": 123 }`} → número | ✅ {`{ "id": "123" }`} → string
+              </Box>
+            </Box>
+          )}
+
           <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
             💡 Limite: {pageSize >= 1000 ? `${pageSize / 1000}K` : pageSize} documento(s) por página (ajuste na paginação abaixo)
           </Typography>
