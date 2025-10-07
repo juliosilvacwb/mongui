@@ -4,20 +4,17 @@ import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { Box, Chip } from "@mui/material";
 
 interface AppBarTopProps {
-  onRefresh?: () => void;
   onToggleTheme?: () => void;
   isDarkMode?: boolean;
   connectionStatus?: "connected" | "disconnected" | "connecting";
 }
 
 export default function AppBarTop({
-  onRefresh,
   onToggleTheme,
   isDarkMode = true,
   connectionStatus = "connected",
@@ -42,10 +39,6 @@ export default function AppBarTop({
             size="small"
             sx={{ textTransform: "capitalize" }}
           />
-
-          <IconButton color="inherit" onClick={onRefresh}>
-            <RefreshIcon />
-          </IconButton>
 
           <IconButton color="inherit" onClick={onToggleTheme}>
             {isDarkMode ? <Brightness7Icon /> : <Brightness4Icon />}
