@@ -22,6 +22,12 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 25,
+  });
+  const [isCustomQuery, setIsCustomQuery] = useState(false);
   const [snackbar, setSnackbar] = useState<{ 
     open: boolean; 
     message: string; 
@@ -33,20 +39,34 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
   });
 
   useEffect(() => {
+    // Resetar paginação ao mudar de collection
+    setPaginationModel({ page: 0, pageSize: 25 });
+    setIsCustomQuery(false);
     fetchDocuments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbName, collectionName]);
+
+  useEffect(() => {
+    if (!isCustomQuery) {
+      fetchDocuments();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paginationModel.page, paginationModel.pageSize]);
 
   const fetchDocuments = async () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/documents?db=${dbName}&collection=${collectionName}`
+        `/api/documents?db=${dbName}&collection=${collectionName}&page=${paginationModel.page}&pageSize=${paginationModel.pageSize}`
       );
       const result = await response.json();
 
-      if (result.success && result.data.length > 0) {
-        // Gerar colunas dinamicamente baseado nas chaves do primeiro documento
-        const firstDoc = result.data[0];
+      if (result.success) {
+        setTotalCount(result.totalCount || 0);
+        
+        if (result.data.length > 0) {
+          // Gerar colunas dinamicamente baseado nas chaves do primeiro documento
+          const firstDoc = result.data[0];
         const generatedColumns: GridColDef[] = Object.keys(firstDoc).map((key) => ({
           field: key,
           headerName: key,
@@ -115,9 +135,10 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
         }));
 
         setRows(gridRows);
-      } else {
-        setColumns([]);
-        setRows([]);
+        } else {
+          setColumns([]);
+          setRows([]);
+        }
       }
     } catch (error) {
       console.error("Erro ao buscar documentos:", error);
@@ -133,6 +154,11 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
   };
 
   const handleQueryResult = (results: any[]) => {
+    // Marcar como query customizada (paginação client-side)
+    setIsCustomQuery(true);
+    setPaginationModel({ page: 0, pageSize: 25 });
+    setTotalCount(results.length);
+    
     // Preparar dados para o grid
     const gridRows = results.map((doc: any) => ({
       ...doc,
@@ -245,6 +271,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
             ? `${count} documentos criados` 
             : "Documento criado";
           setSnackbar({ open: true, message, severity: "success" });
+          setPaginationModel({ page: 0, pageSize: paginationModel.pageSize }); // Voltar para primeira página
           fetchDocuments();
         } else {
           throw new Error(result.error);
@@ -305,6 +332,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
       <QueryPanel
         dbName={dbName}
         collectionName={collectionName}
+        pageSize={paginationModel.pageSize}
         onQueryResult={handleQueryResult}
       />
       
@@ -315,14 +343,40 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
               {dbName} → {collectionName}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {rows.length} documento(s)
+              {totalCount > 0 ? (
+                <>
+                  {paginationModel.page * paginationModel.pageSize + 1}-
+                  {Math.min((paginationModel.page + 1) * paginationModel.pageSize, totalCount)} de {totalCount} documento(s)
+                </>
+              ) : (
+                "0 documentos"
+              )}
             </Typography>
           </Box>
           <Box sx={{ display: "flex", gap: 1 }}>
             <Button startIcon={<AddIcon />} variant="contained" size="small" onClick={handleCreate}>
               Novo
             </Button>
-            <IconButton size="small" onClick={fetchDocuments}>
+            {isCustomQuery && (
+              <Button 
+                variant="outlined" 
+                size="small" 
+                onClick={() => {
+                  setIsCustomQuery(false);
+                  setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
+                  fetchDocuments();
+                }}
+              >
+                Limpar Filtro
+              </Button>
+            )}
+            <IconButton 
+              size="small" 
+              onClick={() => {
+                setIsCustomQuery(false);
+                fetchDocuments();
+              }}
+            >
               <RefreshIcon />
             </IconButton>
           </Box>
@@ -332,10 +386,18 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
           rows={rows}
           columns={columns}
           loading={loading}
-          pageSizeOptions={[10, 25, 50, 100]}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 25 } },
-          }}
+          rowCount={totalCount}
+          paginationMode={isCustomQuery ? "client" : "server"}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={[
+            { value: 25, label: "25" },
+            { value: 50, label: "50" },
+            { value: 100, label: "100" },
+            { value: 1000, label: "1K" },
+            { value: 10000, label: "10K" },
+            { value: 100000, label: "100K" },
+          ]}
           sx={{
             border: 0,
             "& .MuiDataGrid-cell": {

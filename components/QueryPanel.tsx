@@ -7,7 +7,6 @@ import {
   TextField,
   Button,
   Typography,
-  Grid,
   Collapse,
   IconButton,
 } from "@mui/material";
@@ -18,18 +17,19 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 interface QueryPanelProps {
   dbName: string;
   collectionName: string;
+  pageSize: number;
   onQueryResult: (results: any[]) => void;
 }
 
 export default function QueryPanel({
   dbName,
   collectionName,
+  pageSize,
   onQueryResult,
 }: QueryPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const [filter, setFilter] = useState("{}");
   const [sort, setSort] = useState("{}");
-  const [limit, setLimit] = useState("50");
   const [error, setError] = useState<string | null>(null);
 
   const handleQuery = async () => {
@@ -45,7 +45,7 @@ export default function QueryPanel({
           collection: collectionName,
           filter: parsedFilter,
           sort: parsedSort,
-          limit: parseInt(limit, 10),
+          limit: pageSize, // Usar o pageSize da paginação
         }),
       });
 
@@ -82,40 +82,32 @@ export default function QueryPanel({
 
       <Collapse in={expanded}>
         <Box sx={{ p: 2, pt: 0 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Filtro (JSON)"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                placeholder='{ "idade": { "$gt": 25 } }'
-                multiline
-                rows={3}
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Ordenação (JSON)"
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                placeholder='{ "idade": -1 }'
-                size="small"
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Limite"
-                value={limit}
-                onChange={(e) => setLimit(e.target.value)}
-                type="number"
-                size="small"
-              />
-            </Grid>
-          </Grid>
+          <Box sx={{ display: "flex", gap: 2, mb: 1 }}>
+            <TextField
+              label="Filtro (JSON)"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder='{ "idade": { "$gt": 25 } }'
+              multiline
+              rows={3}
+              size="small"
+              sx={{ flex: 2 }}
+            />
+            <TextField
+              label="Ordenação (JSON)"
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              placeholder='{ "idade": -1 }'
+              multiline
+              rows={3}
+              size="small"
+              sx={{ flex: 1 }}
+            />
+          </Box>
+          
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
+            💡 Limite: {pageSize >= 1000 ? `${pageSize / 1000}K` : pageSize} documento(s) por página (ajuste na paginação abaixo)
+          </Typography>
 
           {error && (
             <Typography color="error" variant="body2" sx={{ mt: 1 }}>

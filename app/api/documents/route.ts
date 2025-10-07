@@ -7,7 +7,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const dbName = searchParams.get("db");
     const collectionName = searchParams.get("collection");
-    const limitParam = searchParams.get("limit") || "50";
+    const pageParam = searchParams.get("page") || "0";
+    const pageSizeParam = searchParams.get("pageSize") || "25";
 
     if (!dbName || !collectionName) {
       return NextResponse.json(
@@ -20,8 +21,15 @@ export async function GET(request: Request) {
     const db = client.db(dbName);
     const collection = db.collection(collectionName);
 
-    const limit = parseInt(limitParam, 10);
-    const documents = await collection.find({}).limit(limit).toArray();
+    const page = parseInt(pageParam, 10);
+    const pageSize = parseInt(pageSizeParam, 10);
+    const skip = page * pageSize;
+    
+    // Buscar documentos da página atual e contar o total
+    const [documents, totalCount] = await Promise.all([
+      collection.find({}).skip(skip).limit(pageSize).toArray(),
+      collection.countDocuments({})
+    ]);
 
     // Converter ObjectId para string para serialização JSON
     const serializedDocs = documents.map((doc) => ({
@@ -32,7 +40,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       data: serializedDocs,
-      count: serializedDocs.length,
+      totalCount: totalCount,
     });
   } catch (error: any) {
     return NextResponse.json(
