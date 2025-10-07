@@ -91,8 +91,8 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_ROOT_USERNAME: mongoadmin
+      MONGO_INITDB_ROOT_PASSWORD: secret
     volumes:
       - mongodb_data:/data/db
 
@@ -121,7 +121,7 @@ docker-compose down -v
 Add to `.env.local`:
 
 ```bash
-MONGODB_URI=mongodb://admin:password123@localhost:27017/?authSource=admin
+MONGODB_URI=mongodb://mongoadmin:secret@localhost:27017/?authSource=admin
 READ_ONLY=false
 ```
 
@@ -836,7 +836,7 @@ This project is licensed under the **MIT License**.
 ```
 MIT License
 
-Copyright (c) 2025 Julio Dev
+Copyright (c) 2025 Julio Silva
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -871,15 +871,15 @@ SOFTWARE.
 ## 📞 Support
 
 For questions, suggestions, or issues:
-- 📧 Email: [your-email@example.com]
-- 💬 Issues: [GitHub Issues](https://github.com/your-username/mongui/issues)
+- 📧 Email: [julio.silva.cwb@gmail.com]
+- 💬 Issues: [GitHub Issues](https://github.com/juliosilvacwb/mongui/issues)
 - 📖 Documentation: See inline help and modals in the application
 
 ---
 
 ## 👨‍💻 Author
 
-**Julio Dev**  
+**Julio Silva**  
 Developed with ❤️ using Next.js, Material UI, and MongoDB
 
 ---
