@@ -8,6 +8,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DocumentModal from "./DocumentModal";
+import QueryPanel from "./QueryPanel";
 
 interface DocumentGridProps {
   dbName: string;
@@ -131,6 +132,99 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
     setModalOpen(true);
   };
 
+  const handleQueryResult = (results: any[]) => {
+    // Preparar dados para o grid
+    const gridRows = results.map((doc: any) => ({
+      ...doc,
+      id: doc._id,
+    }));
+    setRows(gridRows);
+
+    // Atualizar colunas se necessário
+    if (results.length > 0) {
+      const firstDoc = results[0];
+      const generatedColumns: GridColDef[] = Object.keys(firstDoc).map((key) => ({
+        field: key,
+        headerName: key,
+        width: key === "_id" ? 220 : 150,
+        flex: key === "_id" ? 0 : 1,
+      }));
+
+      // Adicionar coluna de ações no final
+      generatedColumns.push({
+        field: "actions",
+        headerName: "",
+        width: 100,
+        sortable: false,
+        filterable: false,
+        hideable: false,
+        disableColumnMenu: true,
+        renderCell: (params) => (
+          <Box 
+            sx={{ 
+              display: "flex", 
+              gap: 0.5,
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              opacity: 0,
+              transition: "opacity 0.2s",
+              ".MuiDataGrid-row:hover &": {
+                opacity: 1,
+              },
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={() => handleEditRow(params.row)}
+              sx={{
+                "&:hover": {
+                  backgroundColor: "primary.main",
+                  color: "primary.contrastText",
+                },
+              }}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={async () => {
+                if (!confirm("Deseja realmente excluir este documento?")) return;
+                
+                try {
+                  const response = await fetch(
+                    `/api/documents?db=${dbName}&collection=${collectionName}&id=${params.row._id}`,
+                    { method: "DELETE" }
+                  );
+                  const result = await response.json();
+
+                  if (result.success) {
+                    setSnackbar({ open: true, message: "Documento excluído", severity: "success" });
+                    fetchDocuments();
+                  } else {
+                    throw new Error(result.error);
+                  }
+                } catch (error: any) {
+                  setSnackbar({ open: true, message: "Erro: " + error.message, severity: "error" });
+                }
+              }}
+              sx={{
+                "&:hover": {
+                  backgroundColor: "error.main",
+                  color: "error.contrastText",
+                },
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        ),
+      });
+
+      setColumns(generatedColumns);
+    }
+  };
+
   const handleSave = async (data: any) => {
     try {
       if (modalMode === "create") {
@@ -208,7 +302,13 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
 
   return (
     <>
-      <Paper sx={{ height: "calc(100vh - 150px)", width: "100%", position: "relative" }}>
+      <QueryPanel
+        dbName={dbName}
+        collectionName={collectionName}
+        onQueryResult={handleQueryResult}
+      />
+      
+      <Paper sx={{ height: "calc(100vh - 250px)", width: "100%", position: "relative" }}>
         <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Box>
             <Typography variant="h6">

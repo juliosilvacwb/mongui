@@ -1841,12 +1841,25 @@ DELETE:
 
 ---
 
-## Fase 7: Consultas Avançadas
+## Fase 7: Consultas Avançadas ✅ CONCLUÍDA
 
 ### 🎯 Objetivo
 Permitir executar consultas personalizadas com filtros, ordenação e limite.
 
-### 📝 Passo 7.1: Criar API de Query
+**Status:** ✅ Concluído em 07/10/2025
+
+### 📋 Resumo da Fase 7
+- ✅ API de query POST criada (`/api/query`)
+- ✅ QueryPanel com campos de filtro, ordenação e limite
+- ✅ Painel colapsável/expansível
+- ✅ Integração com DocumentGrid
+- ✅ Validação JSON nos campos
+- ✅ Atualização dinâmica do grid com resultados
+- ✅ Limite padrão de 50 documentos
+
+---
+
+### 📝 Passo 7.1: Criar API de Query ✅
 
 Criar `app/api/query/route.ts`:
 
@@ -1906,7 +1919,9 @@ export async function POST(request: Request) {
 }
 ```
 
-### 📝 Passo 7.2: Criar Componente QueryPanel
+**Status:** ✅ Concluído - API aceita filter, sort e limit em JSON
+
+### 📝 Passo 7.2: Criar Componente QueryPanel ✅
 
 Criar `components/QueryPanel.tsx`:
 
@@ -2052,7 +2067,9 @@ export default function QueryPanel({
 }
 ```
 
-### 📝 Passo 7.3: Integrar QueryPanel ao DocumentGrid
+**Status:** ✅ Concluído - Painel colapsável com Grid layout responsivo
+
+### 📝 Passo 7.3: Integrar QueryPanel ao DocumentGrid ✅
 
 Atualizar `components/DocumentGrid.tsx` - adicionar import e função:
 
@@ -2095,14 +2112,107 @@ return (
 );
 ```
 
-### ✅ Passo 7.4: Validar Consultas
+### ✅ Passo 7.4: Validar Consultas ✅
 
 **Testar:**
-- [ ] Expandir painel de consulta
-- [ ] Filtrar por campo: `{ "idade": { "$gt": 25 } }`
-- [ ] Ordenar: `{ "idade": -1 }`
-- [ ] Limitar resultados
-- [ ] Ver resultados atualizados no grid
+- [x] Expandir painel de consulta
+- [x] Filtrar por campo: `{ "idade": { "$gt": 25 } }`
+- [x] Ordenar: `{ "idade": -1 }`
+- [x] Limitar resultados
+- [x] Ver resultados atualizados no grid
+
+**Status:** ✅ Consultas funcionando - Servidor em http://localhost:3001
+
+### 📝 Notas de Implementação da Fase 7
+
+#### Arquivos Criados:
+1. **`app/api/query/route.ts`** (51 linhas)
+   - Endpoint POST `/api/query`
+   - Aceita: db, collection, filter, sort, limit
+   - Validação de parâmetros obrigatórios
+   - Query builder com encadeamento MongoDB
+   - Limite padrão de 50 documentos
+   - Serialização de ObjectId
+
+2. **`components/QueryPanel.tsx`** (137 linhas)
+   - Painel colapsável com ícone expand/collapse
+   - Grid responsivo (6/3/3 colunas)
+   - Campos:
+     - Filtro: TextField multiline (3 rows)
+     - Ordenação: TextField single line
+     - Limite: TextField type="number"
+   - Validação JSON com try/catch
+   - Botão "Executar Query" com ícone de busca
+   - Mensagens de erro inline
+
+#### Arquivos Modificados:
+1. **`components/DocumentGrid.tsx`** (adicionadas ~90 linhas)
+   - Import do QueryPanel
+   - Função `handleQueryResult()`
+   - Atualiza rows e columns dinamicamente
+   - Adiciona coluna de ações aos resultados
+   - Altura ajustada para 250px (espaço para query panel)
+   - QueryPanel renderizado acima do Paper
+
+#### Funcionalidades Implementadas:
+- **Filtros MongoDB:**
+  - Operadores: $gt, $lt, $gte, $lte, $eq, $ne
+  - Operadores lógicos: $and, $or, $not
+  - Arrays: $in, $nin
+  - Regex: $regex
+  - Exemplo: `{ "idade": { "$gt": 25 } }`
+
+- **Ordenação:**
+  - Ascendente: `{ "nome": 1 }`
+  - Descendente: `{ "idade": -1 }`
+  - Múltiplos campos: `{ "idade": -1, "nome": 1 }`
+
+- **Limite:**
+  - Configurável via campo numérico
+  - Padrão: 50 documentos
+
+#### Fluxo de Consulta:
+```
+1. Usuário expande QueryPanel (click no header)
+2. Digite filtro JSON: { "status": "ativo" }
+3. Digite ordenação: { "data": -1 }
+4. Configure limite: 100
+5. Click "Executar Query"
+6. handleQuery() → parse JSON → POST /api/query
+7. API executa find().sort().limit()
+8. Retorna resultados serializados
+9. handleQueryResult() atualiza grid
+10. Colunas regeneradas se necessário
+```
+
+#### Exemplos de Queries:
+```javascript
+// Filtrar por idade maior que 25
+{ "idade": { "$gt": 25 } }
+
+// Filtrar por status E idade
+{ "$and": [{ "status": "ativo" }, { "idade": { "$gte": 18 } }] }
+
+// Buscar por nome (regex case-insensitive)
+{ "nome": { "$regex": "João", "$options": "i" } }
+
+// Filtrar por categoria em array
+{ "categorias": { "$in": ["tecnologia", "ciência"] } }
+
+// Ordenar por data decrescente
+{ "data": -1 }
+
+// Ordenar por múltiplos campos
+{ "prioridade": -1, "nome": 1 }
+```
+
+#### UX/UI:
+- Painel discreto (collapsed por padrão)
+- Click no header para expandir
+- Layout responsivo (Grid 12 colunas)
+- Campos com placeholders explicativos
+- Erro inline quando JSON inválido
+- Botão verde de executar
 
 ---
 
