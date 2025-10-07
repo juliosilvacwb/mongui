@@ -1318,12 +1318,25 @@ npm run dev
 
 ---
 
-## Fase 6: Operações CRUD
+## Fase 6: Operações CRUD ✅ CONCLUÍDA
 
 ### 🎯 Objetivo
 Implementar criação, edição e exclusão de documentos.
 
-### 📝 Passo 6.1: Expandir API de Documentos (POST, PUT, DELETE)
+**Status:** ✅ Concluído em 07/10/2025
+
+### 📋 Resumo da Fase 6
+- ✅ API expandida com métodos POST, PUT, DELETE
+- ✅ Componente DocumentModal para edição JSON
+- ✅ Barra de ações no DocumentGrid (Novo, Editar, Excluir, Refresh)
+- ✅ Integração completa CRUD
+- ✅ Feedback visual com Snackbar
+- ✅ Validação de JSON no modal
+- ✅ Confirmação de exclusão
+
+---
+
+### 📝 Passo 6.1: Expandir API de Documentos (POST, PUT, DELETE) ✅
 
 Atualizar `app/api/documents/route.ts` - adicionar ao final:
 
@@ -1704,14 +1717,127 @@ return (
 );
 ```
 
-### ✅ Passo 6.4: Validar CRUD
+### ✅ Passo 6.4: Validar CRUD ✅
 
 **Testar:**
-- [ ] Criar novo documento via botão "Novo"
-- [ ] Selecionar linha e clicar em editar
-- [ ] Modificar campos e salvar
-- [ ] Excluir documento selecionado
-- [ ] Atualizar lista com botão refresh
+- [x] Criar novo documento via botão "Novo"
+- [x] Selecionar linha e clicar em editar
+- [x] Modificar campos e salvar
+- [x] Excluir documento selecionado
+- [x] Atualizar lista com botão refresh
+
+**Status:** ✅ CRUD completo funcionando - Servidor em http://localhost:3001
+
+### 📝 Notas de Implementação da Fase 6
+
+#### Arquivos Modificados:
+1. **`app/api/documents/route.ts`** (156 linhas - expandido)
+   - **POST:** Cria documento com `insertOne()`
+   - **PUT:** Atualiza com `updateOne()` e `$set`
+   - **DELETE:** Remove com `deleteOne()` usando ObjectId
+   - Import do ObjectId do mongodb
+   - Validação de campos obrigatórios em todas as rotas
+   - Remoção automática do `_id` no update
+
+2. **`components/DocumentModal.tsx`** (85 linhas - novo)
+   - Dialog fullWidth com maxWidth="md"
+   - TextField multiline (15 rows) para edição JSON
+   - Validação JSON com try/catch
+   - Mensagens de erro inline
+   - Fonte monoespaçada (Roboto Mono)
+   - useEffect para resetar dados quando modal abre
+   - Props: open, mode, initialData, onClose, onSave
+
+3. **`components/DocumentGrid.tsx`** (232 linhas - reescrito)
+   - **Estados adicionados:**
+     - selectedRow: documento selecionado
+     - modalOpen: controle do modal
+     - modalMode: "create" ou "edit"
+     - snackbar: feedback visual
+   - **Handlers:**
+     - handleCreate(): abre modal em modo criação
+     - handleEdit(): valida seleção e abre modal
+     - handleDelete(): confirma e deleta documento
+     - handleSave(): POST ou PUT baseado no mode
+   - **Barra de ações:**
+     - Botão "Novo" (contained, verde)
+     - IconButton Editar (disabled se não selecionado)
+     - IconButton Excluir (color="error", disabled)
+     - IconButton Refresh
+   - **Seleção de linha:**
+     - onRowSelectionModelChange configurado
+     - Array.isArray() para compatibilidade de tipos
+     - selectedRow atualizado automaticamente
+
+#### Funcionalidades Implementadas:
+- **Criar documento:**
+  - Click "Novo" → Modal vazio → Digite JSON → Salvar
+  - Validação JSON antes de enviar
+  - Feedback "Documento criado"
+
+- **Editar documento:**
+  - Selecione linha → Click editar → Modal com dados
+  - Modificar JSON → Salvar
+  - Feedback "Documento atualizado"
+
+- **Excluir documento:**
+  - Selecione linha → Click excluir → Confirmar
+  - Documento removido do MongoDB
+  - Grid atualizado automaticamente
+  - Feedback "Documento excluído"
+
+- **Refresh:**
+  - Click refresh → Recarrega documentos
+  - Mantém seleção de collection
+
+#### Fluxo CRUD Completo:
+```
+CREATE:
+1. Click "Novo" → setModalOpen(true), mode="create"
+2. Modal abre com JSON vazio {}
+3. Usuário digita JSON
+4. Click Salvar → handleSave()
+5. POST /api/documents
+6. insertOne() no MongoDB
+7. Snackbar de sucesso
+8. fetchDocuments() recarrega grid
+
+UPDATE:
+1. Seleciona linha → setSelectedRow()
+2. Click Editar → setModalOpen(true), mode="edit"
+3. Modal abre com JSON do documento
+4. Usuário modifica JSON
+5. Click Salvar → handleSave()
+6. PUT /api/documents com id
+7. updateOne() com $set
+8. Snackbar de sucesso
+9. fetchDocuments() recarrega grid
+
+DELETE:
+1. Seleciona linha → setSelectedRow()
+2. Click Excluir → confirm()
+3. Se confirmado → handleDelete()
+4. DELETE /api/documents?id=...
+5. deleteOne() no MongoDB
+6. Snackbar de sucesso
+7. fetchDocuments() recarrega grid
+8. setSelectedRow(null)
+```
+
+#### Validações Implementadas:
+- ✅ JSON válido no modal (parse)
+- ✅ Documento selecionado para editar/excluir
+- ✅ Confirmação antes de excluir
+- ✅ Parâmetros obrigatórios nas APIs
+- ✅ Tratamento de erros com try/catch
+- ✅ Feedback visual em todas operações
+
+#### UX/UI:
+- Botões desabilitados quando apropriado
+- Cores semanticas (error para excluir)
+- Snackbar auto-fecha em 3 segundos
+- Modal responsivo e acessível
+- Editor JSON com fonte monoespaçada
 
 ---
 
