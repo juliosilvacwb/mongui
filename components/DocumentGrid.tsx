@@ -6,7 +6,7 @@ import { ColDef, ICellRendererParams, ModuleRegistry } from "ag-grid-community";
 import { AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-material.css";
-import { Box, Paper, Typography, Button, IconButton, Snackbar, Alert } from "@mui/material";
+import { Box, Paper, Typography, Button, IconButton, Snackbar, Alert, Chip, Tooltip, Collapse } from "@mui/material";
 
 // Registrar módulos do AG Grid Community
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -33,6 +33,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
   const [paginationPageSize, setPaginationPageSize] = useState(25);
   const [currentPage, setCurrentPage] = useState(0);
   const [isCustomQuery, setIsCustomQuery] = useState(false);
+  const [showFilterAlert, setShowFilterAlert] = useState(true);
   const [snackbar, setSnackbar] = useState<{ 
     open: boolean; 
     message: string; 
@@ -42,6 +43,19 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
     message: "",
     severity: "success",
   });
+
+  // Verificar se já viu o alerta antes
+  useEffect(() => {
+    const hasSeenAlert = localStorage.getItem('mongui-filter-alert-seen');
+    if (hasSeenAlert) {
+      setShowFilterAlert(false);
+    }
+  }, []);
+
+  const dismissAlert = () => {
+    setShowFilterAlert(false);
+    localStorage.setItem('mongui-filter-alert-seen', 'true');
+  };
 
   useEffect(() => {
     setCurrentPage(0);
@@ -350,6 +364,20 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
 
   return (
     <>
+      {/* Alerta educativo - aparece apenas na primeira vez */}
+      <Collapse in={showFilterAlert && !isCustomQuery}>
+        <Alert 
+          severity="info" 
+          onClose={dismissAlert}
+          sx={{ mb: 2 }}
+        >
+          <Typography variant="body2">
+            <strong>💡 Dica:</strong> Os filtros e ordenação nas colunas funcionam apenas nos dados visíveis na página atual.
+            Para filtrar toda a collection, use a <strong>Consulta Avançada</strong> abaixo.
+          </Typography>
+        </Alert>
+      </Collapse>
+
       <QueryPanel
         dbName={dbName}
         collectionName={collectionName}
@@ -357,22 +385,38 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
         onQueryResult={handleQueryResult}
       />
       
-      <Paper sx={{ height: "calc(100vh - 250px)", width: "100%", position: "relative" }}>
+      <Paper sx={{ height: showFilterAlert && !isCustomQuery ? "calc(100vh - 330px)" : "calc(100vh - 250px)", width: "100%", position: "relative", transition: "height 0.3s" }}>
         <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Box>
             <Typography variant="h6">
               {dbName} → {collectionName}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {!isCustomQuery && totalCount > 0 ? (
-                <>
-                  {currentPage * paginationPageSize + 1}-
-                  {Math.min((currentPage + 1) * paginationPageSize, totalCount)} de {totalCount} documento(s)
-                </>
-              ) : (
-                `${totalCount} documento(s)`
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                {!isCustomQuery && totalCount > 0 ? (
+                  <>
+                    {currentPage * paginationPageSize + 1}-
+                    {Math.min((currentPage + 1) * paginationPageSize, totalCount)} de {totalCount} documento(s)
+                  </>
+                ) : (
+                  `${totalCount} documento(s)`
+                )}
+              </Typography>
+              {!isCustomQuery && (
+                <Tooltip 
+                  title="Filtros e ordenação nas colunas funcionam apenas nos dados desta página. Use 'Consulta Avançada' para filtrar toda a collection."
+                  arrow
+                >
+                  <Chip 
+                    label="Filtros Locais" 
+                    size="small" 
+                    variant="outlined"
+                    color="info"
+                    sx={{ fontSize: "0.7rem", height: "20px" }}
+                  />
+                </Tooltip>
               )}
-            </Typography>
+            </Box>
           </Box>
           <Box sx={{ display: "flex", gap: 1 }}>
             <Button startIcon={<AddIcon />} variant="contained" size="small" onClick={handleCreate}>

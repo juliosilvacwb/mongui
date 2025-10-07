@@ -74,7 +74,12 @@ export default function QueryPanel({
         }}
         onClick={() => setExpanded(!expanded)}
       >
-        <Typography variant="subtitle1">🔍 Consulta Avançada</Typography>
+        <Box>
+          <Typography variant="subtitle1">🔍 Consulta Avançada (Filtros Server-Side)</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Filtra TODA a collection no MongoDB
+          </Typography>
+        </Box>
         <IconButton size="small">
           {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
         </IconButton>
