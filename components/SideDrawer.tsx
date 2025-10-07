@@ -86,8 +86,8 @@ export default function SideDrawer() {
 
   const handleCollectionClick = (dbName: string, collectionName: string) => {
     setSelectedCollection(`${dbName}/${collectionName}`);
-    // TODO: Navegar para a página de documentos (Fase 5)
-    console.log(`Navegando para: ${dbName}/${collectionName}`);
+    // Navegar para a rota dinâmica
+    window.location.href = `/${dbName}/${collectionName}`;
   };
 
   if (loading) {
