@@ -1,13 +1,15 @@
-/* Customização do AG Grid para Material UI Theme - Dark Mode MongoDB */
+/* Customização do AG Grid para Material UI Theme */
 
-.ag-theme-material,
-.ag-theme-material.ag-theme-dark {
+.ag-theme-material {
   /* Dimensões */
   --ag-header-height: 56px;
   --ag-row-height: 52px;
   --ag-font-size: 14px;
   --ag-font-family: Roboto, sans-serif;
-  
+}
+
+/* ===== TEMA ESCURO (Dark Mode) ===== */
+.ag-theme-material.ag-theme-dark {
   /* Cores do tema escuro MongoDB */
   --ag-background-color: #2C2C2C !important;
   --ag-foreground-color: rgba(255, 255, 255, 0.87) !important;
@@ -47,33 +49,103 @@
   color: rgba(255, 255, 255, 0.87) !important;
 }
 
-/* Forçar background nos elementos principais */
-.ag-theme-material .ag-root-wrapper,
-.ag-theme-material .ag-root,
-.ag-theme-material .ag-body-viewport {
+/* ===== TEMA CLARO (Light Mode) ===== */
+.ag-theme-material.ag-theme-light {
+  /* Cores do tema claro */
+  --ag-background-color: #FFFFFF !important;
+  --ag-foreground-color: rgba(0, 0, 0, 0.87) !important;
+  --ag-secondary-foreground-color: rgba(0, 0, 0, 0.6) !important;
+  --ag-disabled-foreground-color: rgba(0, 0, 0, 0.38) !important;
+  
+  /* Header */
+  --ag-header-background-color: #FAFAFA !important;
+  --ag-header-foreground-color: rgba(0, 0, 0, 0.87) !important;
+  
+  /* Bordas */
+  --ag-border-color: rgba(0, 0, 0, 0.12) !important;
+  --ag-row-border-color: rgba(0, 0, 0, 0.08) !important;
+  
+  /* Linhas */
+  --ag-odd-row-background-color: #FFFFFF !important;
+  --ag-row-hover-color: rgba(0, 104, 74, 0.08) !important;
+  --ag-selected-row-background-color: rgba(0, 104, 74, 0.15) !important;
+  
+  /* Cores de destaque (verde MongoDB escuro) */
+  --ag-alpine-active-color: #00684A !important;
+  --ag-checkbox-checked-color: #00684A !important;
+  --ag-range-selection-border-color: #00684A !important;
+  
+  /* Inputs e controles */
+  --ag-input-focus-border-color: #00684A !important;
+  --ag-input-border-color: rgba(0, 0, 0, 0.23) !important;
+  
+  /* Paginação */
+  --ag-control-panel-background-color: #FAFAFA !important;
+  
+  /* Overlays */
+  --ag-modal-overlay-background-color: rgba(245, 245, 245, 0.66) !important;
+  
+  /* Forçar background e cor de texto */
+  background-color: #FFFFFF !important;
+  color: rgba(0, 0, 0, 0.87) !important;
+}
+
+/* Forçar background nos elementos principais - DARK MODE */
+.ag-theme-material.ag-theme-dark .ag-root-wrapper,
+.ag-theme-material.ag-theme-dark .ag-root,
+.ag-theme-material.ag-theme-dark .ag-body-viewport {
   background-color: #2C2C2C !important;
 }
 
-.ag-theme-material .ag-center-cols-container,
-.ag-theme-material .ag-center-cols-viewport {
+.ag-theme-material.ag-theme-dark .ag-center-cols-container,
+.ag-theme-material.ag-theme-dark .ag-center-cols-viewport {
   background-color: #2C2C2C !important;
 }
 
-.ag-theme-material .ag-row {
+.ag-theme-material.ag-theme-dark .ag-row {
   background-color: #2C2C2C !important;
   color: rgba(255, 255, 255, 0.87) !important;
 }
 
-.ag-theme-material .ag-row-even {
+.ag-theme-material.ag-theme-dark .ag-row-even {
   background-color: #2C2C2C !important;
 }
 
-.ag-theme-material .ag-row-odd {
+.ag-theme-material.ag-theme-dark .ag-row-odd {
   background-color: #282828 !important;
 }
 
-.ag-theme-material .ag-cell {
+.ag-theme-material.ag-theme-dark .ag-cell {
   color: rgba(255, 255, 255, 0.87) !important;
+}
+
+/* Forçar background nos elementos principais - LIGHT MODE */
+.ag-theme-material.ag-theme-light .ag-root-wrapper,
+.ag-theme-material.ag-theme-light .ag-root,
+.ag-theme-material.ag-theme-light .ag-body-viewport {
+  background-color: #FFFFFF !important;
+}
+
+.ag-theme-material.ag-theme-light .ag-center-cols-container,
+.ag-theme-material.ag-theme-light .ag-center-cols-viewport {
+  background-color: #FFFFFF !important;
+}
+
+.ag-theme-material.ag-theme-light .ag-row {
+  background-color: #FFFFFF !important;
+  color: rgba(0, 0, 0, 0.87) !important;
+}
+
+.ag-theme-material.ag-theme-light .ag-row-even {
+  background-color: #FFFFFF !important;
+}
+
+.ag-theme-material.ag-theme-light .ag-row-odd {
+  background-color: #F5F5F5 !important;
+}
+
+.ag-theme-material.ag-theme-light .ag-cell {
+  color: rgba(0, 0, 0, 0.87) !important;
 }
 
 /* Botões de ação aparecem apenas no hover */
@@ -86,40 +158,70 @@
   opacity: 1;
 }
 
-/* Hover na linha com cor MongoDB */
-.ag-theme-material .ag-row:hover {
+/* Hover na linha - DARK MODE */
+.ag-theme-material.ag-theme-dark .ag-row:hover {
   background-color: rgba(0, 237, 100, 0.05) !important;
 }
 
-/* Header mais escuro */
-.ag-theme-material .ag-header {
+.ag-theme-material.ag-theme-dark .ag-header {
   border-bottom: 2px solid rgba(0, 237, 100, 0.3);
 }
 
-/* Paginação customizada */
-.ag-theme-material .ag-paging-panel {
+.ag-theme-material.ag-theme-dark .ag-paging-panel {
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   background-color: #252525;
   color: rgba(255, 255, 255, 0.87);
 }
 
-.ag-theme-material .ag-paging-button {
+.ag-theme-material.ag-theme-dark .ag-paging-button {
   color: rgba(255, 255, 255, 0.87);
 }
 
-.ag-theme-material .ag-paging-button:disabled {
+.ag-theme-material.ag-theme-dark .ag-paging-button:disabled {
   color: rgba(255, 255, 255, 0.38);
 }
 
-/* Filtros e menus */
-.ag-theme-material .ag-menu {
+.ag-theme-material.ag-theme-dark .ag-menu {
   background-color: #2C2C2C;
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.ag-theme-material .ag-filter-toolpanel-header,
-.ag-theme-material .ag-filter-toolpanel-search {
+.ag-theme-material.ag-theme-dark .ag-filter-toolpanel-header,
+.ag-theme-material.ag-theme-dark .ag-filter-toolpanel-search {
   background-color: #252525;
+}
+
+/* Hover na linha - LIGHT MODE */
+.ag-theme-material.ag-theme-light .ag-row:hover {
+  background-color: rgba(0, 104, 74, 0.05) !important;
+}
+
+.ag-theme-material.ag-theme-light .ag-header {
+  border-bottom: 2px solid rgba(0, 104, 74, 0.3);
+}
+
+.ag-theme-material.ag-theme-light .ag-paging-panel {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: #FAFAFA;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.ag-theme-material.ag-theme-light .ag-paging-button {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.ag-theme-material.ag-theme-light .ag-paging-button:disabled {
+  color: rgba(0, 0, 0, 0.38);
+}
+
+.ag-theme-material.ag-theme-light .ag-menu {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.ag-theme-material.ag-theme-light .ag-filter-toolpanel-header,
+.ag-theme-material.ag-theme-light .ag-filter-toolpanel-search {
+  background-color: #FAFAFA;
 }
 
 /* Scrollbar customizada */
@@ -141,59 +243,104 @@
   background: #555;
 }
 
-/* Classe adicional para forçar dark mode */
+/* Color scheme */
 .ag-theme-dark {
   color-scheme: dark;
 }
 
-/* Cell editing */
-.ag-theme-material .ag-cell-inline-editing {
+.ag-theme-light {
+  color-scheme: light;
+}
+
+/* Cell editing - DARK */
+.ag-theme-material.ag-theme-dark .ag-cell-inline-editing {
   background-color: #363636;
   border: 1px solid #00ED64;
 }
 
-/* Seleção de texto */
-.ag-theme-material .ag-cell-range-selected:not(.ag-cell-focus) {
+.ag-theme-material.ag-theme-dark .ag-cell-range-selected:not(.ag-cell-focus) {
   background-color: rgba(0, 237, 100, 0.1);
 }
 
-/* Loading overlay */
-.ag-theme-material .ag-overlay-loading-wrapper {
+.ag-theme-material.ag-theme-dark .ag-overlay-loading-wrapper {
   background-color: rgba(44, 44, 44, 0.8);
 }
 
-/* No rows overlay */
-.ag-theme-material .ag-overlay-no-rows-wrapper {
+.ag-theme-material.ag-theme-dark .ag-overlay-no-rows-wrapper {
   background-color: #2C2C2C;
 }
 
-/* Inputs em filtros */
-.ag-theme-material input,
-.ag-theme-material select,
-.ag-theme-material textarea {
+/* Cell editing - LIGHT */
+.ag-theme-material.ag-theme-light .ag-cell-inline-editing {
+  background-color: #F0F0F0;
+  border: 1px solid #00684A;
+}
+
+.ag-theme-material.ag-theme-light .ag-cell-range-selected:not(.ag-cell-focus) {
+  background-color: rgba(0, 104, 74, 0.1);
+}
+
+.ag-theme-material.ag-theme-light .ag-overlay-loading-wrapper {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.ag-theme-material.ag-theme-light .ag-overlay-no-rows-wrapper {
+  background-color: #FFFFFF;
+}
+
+/* Inputs em filtros - DARK MODE */
+.ag-theme-material.ag-theme-dark input,
+.ag-theme-material.ag-theme-dark select,
+.ag-theme-material.ag-theme-dark textarea {
   background-color: #363636;
   color: rgba(255, 255, 255, 0.87);
   border-color: rgba(255, 255, 255, 0.23);
 }
 
-.ag-theme-material input:focus,
-.ag-theme-material select:focus,
-.ag-theme-material textarea:focus {
+.ag-theme-material.ag-theme-dark input:focus,
+.ag-theme-material.ag-theme-dark select:focus,
+.ag-theme-material.ag-theme-dark textarea:focus {
   border-color: #00ED64;
   outline: none;
 }
 
-/* Menu de contexto */
-.ag-theme-material .ag-menu-option-active {
+.ag-theme-material.ag-theme-dark .ag-menu-option-active {
   background-color: rgba(0, 237, 100, 0.1);
 }
 
-/* Ícones */
-.ag-theme-material .ag-icon {
+.ag-theme-material.ag-theme-dark .ag-icon {
   color: rgba(255, 255, 255, 0.6);
 }
 
-.ag-theme-material .ag-icon:hover {
+.ag-theme-material.ag-theme-dark .ag-icon:hover {
   color: rgba(255, 255, 255, 0.87);
+}
+
+/* Inputs em filtros - LIGHT MODE */
+.ag-theme-material.ag-theme-light input,
+.ag-theme-material.ag-theme-light select,
+.ag-theme-material.ag-theme-light textarea {
+  background-color: #F5F5F5;
+  color: rgba(0, 0, 0, 0.87);
+  border-color: rgba(0, 0, 0, 0.23);
+}
+
+.ag-theme-material.ag-theme-light input:focus,
+.ag-theme-material.ag-theme-light select:focus,
+.ag-theme-material.ag-theme-light textarea:focus {
+  border-color: #00684A;
+  outline: none;
+}
+
+.ag-theme-material.ag-theme-light .ag-menu-option-active {
+  background-color: rgba(0, 104, 74, 0.1);
+}
+
+.ag-theme-material.ag-theme-light .ag-icon {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.ag-theme-material.ag-theme-light .ag-icon:hover {
+  color: rgba(0, 0, 0, 0.87);
 }
 

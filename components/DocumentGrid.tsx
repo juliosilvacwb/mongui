@@ -7,6 +7,7 @@ import { AllCommunityModule } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-material.css";
 import { Box, Paper, Typography, Button, IconButton, Snackbar, Alert, Chip, Tooltip, Collapse } from "@mui/material";
+import { useThemeMode } from "./ThemeRegistry";
 
 // Registrar módulos do AG Grid Community
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -23,6 +24,7 @@ interface DocumentGridProps {
 }
 
 export default function DocumentGrid({ dbName, collectionName }: DocumentGridProps) {
+  const { mode } = useThemeMode();
   const [rowData, setRowData] = useState<any[]>([]);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const [loading, setLoading] = useState(true);
@@ -448,7 +450,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
         </Box>
 
         <Box 
-          className="ag-theme-material ag-theme-dark"
+          className={`ag-theme-material ${mode === "dark" ? "ag-theme-dark" : "ag-theme-light"}`}
           sx={{ 
             height: "calc(100% - 80px)", 
             width: "100%",

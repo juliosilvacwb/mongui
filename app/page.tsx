@@ -5,11 +5,17 @@ import Toolbar from "@mui/material/Toolbar";
 import AppBarTop from "@/components/AppBarTop";
 import SideDrawer from "@/components/SideDrawer";
 import Typography from "@mui/material/Typography";
+import { useThemeMode } from "@/components/ThemeRegistry";
 
 export default function Home() {
+  const { toggleTheme, mode } = useThemeMode();
+
   return (
     <Box sx={{ display: "flex" }}>
-      <AppBarTop />
+      <AppBarTop 
+        onToggleTheme={toggleTheme}
+        isDarkMode={mode === "dark"}
+      />
       <SideDrawer />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
