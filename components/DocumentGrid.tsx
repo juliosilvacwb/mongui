@@ -21,7 +21,6 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState<{ 
     open: boolean; 
     message: string; 
@@ -53,6 +52,58 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
           width: key === "_id" ? 220 : 150,
           flex: key === "_id" ? 0 : 1,
         }));
+
+        // Adicionar coluna de ações no final (visível apenas no hover)
+        generatedColumns.push({
+          field: "actions",
+          headerName: "",
+          width: 100,
+          sortable: false,
+          filterable: false,
+          hideable: false,
+          disableColumnMenu: true,
+          renderCell: (params) => (
+            <Box 
+              sx={{ 
+                display: "flex", 
+                gap: 0.5,
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                opacity: 0,
+                transition: "opacity 0.2s",
+                ".MuiDataGrid-row:hover &": {
+                  opacity: 1,
+                },
+              }}
+            >
+              <IconButton
+                size="small"
+                onClick={() => handleEditRow(params.row)}
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "primary.main",
+                    color: "primary.contrastText",
+                  },
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => handleDeleteRow(params.row)}
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "error.main",
+                    color: "error.contrastText",
+                  },
+                }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          ),
+        });
 
         setColumns(generatedColumns);
 
@@ -177,87 +228,21 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
           </Box>
         </Box>
 
-        <Box sx={{ position: "relative" }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            loading={loading}
-            pageSizeOptions={[10, 25, 50, 100]}
-            initialState={{
-              pagination: { paginationModel: { pageSize: 25 } },
-            }}
-            slotProps={{
-              row: {
-                onMouseEnter: (event: any) => {
-                  const rowId = event.currentTarget.getAttribute("data-id");
-                  setHoveredRowId(rowId);
-                },
-                onMouseLeave: () => {
-                  setHoveredRowId(null);
-                },
-              },
-            }}
-            sx={{
-              border: 0,
-              "& .MuiDataGrid-cell": {
-                fontSize: "0.875rem",
-              },
-            }}
-          />
-          
-          {/* Botões flutuantes - aparecem abaixo da linha no final */}
-          {hoveredRowId && (
-            <Box
-              onMouseEnter={() => setHoveredRowId(hoveredRowId)}
-              onMouseLeave={() => setHoveredRowId(null)}
-              sx={{
-                position: "absolute",
-                right: 16,
-                top: `calc(${rows.findIndex(r => r.id === hoveredRowId) * 52 + 56 + 52}px)`,
-                display: "flex",
-                gap: 0.5,
-                zIndex: 10,
-                backgroundColor: "background.paper",
-                borderRadius: 1,
-                boxShadow: 3,
-                p: 0.5,
-                border: "1px solid",
-                borderColor: "divider",
-              }}
-            >
-              <IconButton
-                size="small"
-                onClick={() => {
-                  const row = rows.find(r => r.id === hoveredRowId);
-                  if (row) handleEditRow(row);
-                }}
-                sx={{
-                  "&:hover": {
-                    backgroundColor: "primary.main",
-                    color: "primary.contrastText",
-                  },
-                }}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={() => {
-                  const row = rows.find(r => r.id === hoveredRowId);
-                  if (row) handleDeleteRow(row);
-                }}
-                sx={{
-                  "&:hover": {
-                    backgroundColor: "error.main",
-                    color: "error.contrastText",
-                  },
-                }}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Box>
-          )}
-        </Box>
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          loading={loading}
+          pageSizeOptions={[10, 25, 50, 100]}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 25 } },
+          }}
+          sx={{
+            border: 0,
+            "& .MuiDataGrid-cell": {
+              fontSize: "0.875rem",
+            },
+          }}
+        />
       </Paper>
 
       <DocumentModal
