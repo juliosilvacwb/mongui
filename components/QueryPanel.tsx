@@ -9,10 +9,13 @@ import {
   Typography,
   Collapse,
   IconButton,
+  Tooltip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import InfoIcon from "@mui/icons-material/Info";
+import QueryHelpModal from "./QueryHelpModal";
 
 interface QueryPanelProps {
   dbName: string;
@@ -31,6 +34,7 @@ export default function QueryPanel({
   const [filter, setFilter] = useState("{}");
   const [sort, setSort] = useState("{}");
   const [error, setError] = useState<string | null>(null);
+  const [helpModalOpen, setHelpModalOpen] = useState(false);
 
   const handleQuery = async () => {
     try {
@@ -63,27 +67,43 @@ export default function QueryPanel({
   };
 
   return (
-    <Paper sx={{ mb: 2 }}>
-      <Box
-        sx={{
-          p: 2,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          cursor: "pointer",
-        }}
-        onClick={() => setExpanded(!expanded)}
-      >
-        <Box>
-          <Typography variant="subtitle1">🔍 Consulta Avançada (Filtros Server-Side)</Typography>
-          <Typography variant="caption" color="text.secondary">
-            Filtra TODA a collection no MongoDB
-          </Typography>
+    <>
+      <Paper sx={{ mb: 2 }}>
+        <Box
+          sx={{
+            p: 2,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Box 
+            sx={{ flex: 1, cursor: "pointer" }}
+            onClick={() => setExpanded(!expanded)}
+          >
+            <Typography variant="subtitle1">🔍 Consulta Avançada</Typography>
+            <Typography variant="caption" color="text.secondary">
+              Filtra TODA a collection no MongoDB
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", gap: 0.5 }}>
+            <Tooltip title="Ver guia de operadores e exemplos" arrow>
+              <IconButton 
+                size="small" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHelpModalOpen(true);
+                }}
+                color="primary"
+              >
+                <InfoIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <IconButton size="small" onClick={() => setExpanded(!expanded)}>
+              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Box>
         </Box>
-        <IconButton size="small">
-          {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        </IconButton>
-      </Box>
 
       <Collapse in={expanded}>
         <Box sx={{ p: 2, pt: 0 }}>
@@ -132,5 +152,11 @@ export default function QueryPanel({
         </Box>
       </Collapse>
     </Paper>
+
+    <QueryHelpModal 
+      open={helpModalOpen}
+      onClose={() => setHelpModalOpen(false)}
+    />
+  </>
   );
 }
