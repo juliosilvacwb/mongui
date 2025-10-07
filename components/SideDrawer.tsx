@@ -16,10 +16,13 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import DescriptionIcon from "@mui/icons-material/Description";
 import Typography from "@mui/material/Typography";
-import { Button, Divider, Snackbar, Alert } from "@mui/material";
+import { Button, Divider, Snackbar, Alert, IconButton, Tooltip } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 import CreateDatabaseModal from "./CreateDatabaseModal";
 import CreateCollectionModal from "./CreateCollectionModal";
+import DeleteDatabaseModal from "./DeleteDatabaseModal";
+import DeleteCollectionModal from "./DeleteCollectionModal";
 
 const DRAWER_WIDTH = 280;
 
@@ -36,7 +39,14 @@ export default function SideDrawer() {
   const [loading, setLoading] = useState(true);
   const [createDbModalOpen, setCreateDbModalOpen] = useState(false);
   const [createCollectionModalOpen, setCreateCollectionModalOpen] = useState(false);
+  const [deleteDbModalOpen, setDeleteDbModalOpen] = useState(false);
+  const [deleteCollectionModalOpen, setDeleteCollectionModalOpen] = useState(false);
   const [selectedDbForCollection, setSelectedDbForCollection] = useState<string>("");
+  const [selectedDbForDelete, setSelectedDbForDelete] = useState<string>("");
+  const [selectedCollectionForDelete, setSelectedCollectionForDelete] = useState<{
+    db: string;
+    collection: string;
+  }>({ db: "", collection: "" });
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -97,6 +107,45 @@ export default function SideDrawer() {
     if (selectedDbForCollection) {
       handleDatabaseClick(selectedDbForCollection);
     }
+  };
+
+  const handleDeleteDatabase = (dbName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedDbForDelete(dbName);
+    setDeleteDbModalOpen(true);
+  };
+
+  const handleDeleteCollection = (dbName: string, collectionName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedCollectionForDelete({ db: dbName, collection: collectionName });
+    setDeleteCollectionModalOpen(true);
+  };
+
+  const handleDatabaseDeleted = () => {
+    setSnackbar({
+      open: true,
+      message: "Database deletado com sucesso!",
+      severity: "success",
+    });
+    // Redirecionar para home se estava na página do database deletado
+    if (pathname.startsWith(`/${selectedDbForDelete}`)) {
+      router.push("/");
+    }
+    fetchDatabases();
+  };
+
+  const handleCollectionDeleted = () => {
+    setSnackbar({
+      open: true,
+      message: "Collection deletada com sucesso!",
+      severity: "success",
+    });
+    // Redirecionar para home se estava na página da collection deletada
+    if (pathname === `/${selectedCollectionForDelete.db}/${selectedCollectionForDelete.collection}`) {
+      router.push("/");
+    }
+    // Recarregar collections do database
+    handleDatabaseClick(selectedCollectionForDelete.db);
   };
 
   const handleDatabaseClick = async (dbName: string) => {
@@ -196,11 +245,35 @@ export default function SideDrawer() {
           {databases.map((db) => (
             <div key={db.name}>
               {/* Database Item */}
-              <ListItemButton onClick={() => handleDatabaseClick(db.name)}>
+              <ListItemButton 
+                onClick={() => handleDatabaseClick(db.name)}
+                sx={{
+                  "&:hover .delete-db-btn": {
+                    opacity: 1,
+                  },
+                }}
+              >
                 <ListItemIcon>
                   <StorageIcon />
                 </ListItemIcon>
                 <ListItemText primary={db.name} />
+                <Tooltip title="Deletar database">
+                  <IconButton
+                    className="delete-db-btn"
+                    size="small"
+                    onClick={(e) => handleDeleteDatabase(db.name, e)}
+                    sx={{
+                      opacity: 0,
+                      transition: "opacity 0.2s",
+                      mr: 0.5,
+                      "&:hover": {
+                        color: "error.main",
+                      },
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
                 {db.expanded ? <ExpandLess /> : <ExpandMore />}
               </ListItemButton>
 
@@ -232,7 +305,12 @@ export default function SideDrawer() {
                   {db.collections?.map((collection) => (
                     <ListItemButton
                       key={collection}
-                      sx={{ pl: 4 }}
+                      sx={{ 
+                        pl: 4,
+                        "&:hover .delete-collection-btn": {
+                          opacity: 1,
+                        },
+                      }}
                       selected={pathname === `/${db.name}/${collection}`}
                       onClick={() => handleCollectionClick(db.name, collection)}
                     >
@@ -243,6 +321,22 @@ export default function SideDrawer() {
                         primary={collection} 
                         primaryTypographyProps={{ fontSize: "0.875rem" }}
                       />
+                      <Tooltip title="Deletar collection">
+                        <IconButton
+                          className="delete-collection-btn"
+                          size="small"
+                          onClick={(e) => handleDeleteCollection(db.name, collection, e)}
+                          sx={{
+                            opacity: 0,
+                            transition: "opacity 0.2s",
+                            "&:hover": {
+                              color: "error.main",
+                            },
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </ListItemButton>
                   )) || (
                     <ListItemButton sx={{ pl: 4 }} disabled>
@@ -279,6 +373,21 @@ export default function SideDrawer() {
         dbName={selectedDbForCollection}
         onClose={() => setCreateCollectionModalOpen(false)}
         onSuccess={handleCollectionCreated}
+      />
+
+      <DeleteDatabaseModal
+        open={deleteDbModalOpen}
+        dbName={selectedDbForDelete}
+        onClose={() => setDeleteDbModalOpen(false)}
+        onSuccess={handleDatabaseDeleted}
+      />
+
+      <DeleteCollectionModal
+        open={deleteCollectionModalOpen}
+        dbName={selectedCollectionForDelete.db}
+        collectionName={selectedCollectionForDelete.collection}
+        onClose={() => setDeleteCollectionModalOpen(false)}
+        onSuccess={handleCollectionDeleted}
       />
 
       {/* Snackbar */}
