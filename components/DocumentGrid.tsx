@@ -21,6 +21,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState<{ 
     open: boolean; 
     message: string; 
@@ -79,42 +80,6 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
     setModalOpen(true);
   };
 
-  const handleEdit = () => {
-    if (!selectedRow) {
-      setSnackbar({ open: true, message: "Selecione um documento", severity: "error" });
-      return;
-    }
-    setModalMode("edit");
-    setModalOpen(true);
-  };
-
-  const handleDelete = async () => {
-    if (!selectedRow) {
-      setSnackbar({ open: true, message: "Selecione um documento", severity: "error" });
-      return;
-    }
-
-    if (!confirm("Deseja realmente excluir este documento?")) return;
-
-    try {
-      const response = await fetch(
-        `/api/documents?db=${dbName}&collection=${collectionName}&id=${selectedRow._id}`,
-        { method: "DELETE" }
-      );
-      const result = await response.json();
-
-      if (result.success) {
-        setSnackbar({ open: true, message: "Documento excluído", severity: "success" });
-        fetchDocuments();
-        setSelectedRow(null);
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error: any) {
-      setSnackbar({ open: true, message: "Erro: " + error.message, severity: "error" });
-    }
-  };
-
   const handleSave = async (data: any) => {
     try {
       if (modalMode === "create") {
@@ -163,9 +128,36 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
     }
   };
 
+  const handleEditRow = (row: any) => {
+    setSelectedRow(row);
+    setModalMode("edit");
+    setModalOpen(true);
+  };
+
+  const handleDeleteRow = async (row: any) => {
+    if (!confirm("Deseja realmente excluir este documento?")) return;
+    
+    try {
+      const response = await fetch(
+        `/api/documents?db=${dbName}&collection=${collectionName}&id=${row._id}`,
+        { method: "DELETE" }
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        setSnackbar({ open: true, message: "Documento excluído", severity: "success" });
+        fetchDocuments();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      setSnackbar({ open: true, message: "Erro: " + error.message, severity: "error" });
+    }
+  };
+
   return (
     <>
-      <Paper sx={{ height: "calc(100vh - 150px)", width: "100%" }}>
+      <Paper sx={{ height: "calc(100vh - 150px)", width: "100%", position: "relative" }}>
         <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Box>
             <Typography variant="h6">
@@ -179,43 +171,93 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
             <Button startIcon={<AddIcon />} variant="contained" size="small" onClick={handleCreate}>
               Novo
             </Button>
-            <IconButton size="small" onClick={handleEdit} disabled={!selectedRow}>
-              <EditIcon />
-            </IconButton>
-            <IconButton size="small" onClick={handleDelete} disabled={!selectedRow} color="error">
-              <DeleteIcon />
-            </IconButton>
             <IconButton size="small" onClick={fetchDocuments}>
               <RefreshIcon />
             </IconButton>
           </Box>
         </Box>
 
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          loading={loading}
-          pageSizeOptions={[10, 25, 50, 100]}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 25 } },
-          }}
-          onRowSelectionModelChange={(newSelection) => {
-            const selectionArray = Array.isArray(newSelection) ? newSelection : [];
-            if (selectionArray.length > 0) {
-              const selectedId = selectionArray[0];
-              const selected = rows.find((row) => row.id === selectedId);
-              setSelectedRow(selected || null);
-            } else {
-              setSelectedRow(null);
-            }
-          }}
-          sx={{
-            border: 0,
-            "& .MuiDataGrid-cell": {
-              fontSize: "0.875rem",
-            },
-          }}
-        />
+        <Box sx={{ position: "relative" }}>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            loading={loading}
+            pageSizeOptions={[10, 25, 50, 100]}
+            initialState={{
+              pagination: { paginationModel: { pageSize: 25 } },
+            }}
+            slotProps={{
+              row: {
+                onMouseEnter: (event: any) => {
+                  const rowId = event.currentTarget.getAttribute("data-id");
+                  setHoveredRowId(rowId);
+                },
+                onMouseLeave: () => {
+                  setHoveredRowId(null);
+                },
+              },
+            }}
+            sx={{
+              border: 0,
+              "& .MuiDataGrid-cell": {
+                fontSize: "0.875rem",
+              },
+            }}
+          />
+          
+          {/* Botões flutuantes - aparecem abaixo da linha no final */}
+          {hoveredRowId && (
+            <Box
+              onMouseEnter={() => setHoveredRowId(hoveredRowId)}
+              onMouseLeave={() => setHoveredRowId(null)}
+              sx={{
+                position: "absolute",
+                right: 16,
+                top: `calc(${rows.findIndex(r => r.id === hoveredRowId) * 52 + 56 + 52}px)`,
+                display: "flex",
+                gap: 0.5,
+                zIndex: 10,
+                backgroundColor: "background.paper",
+                borderRadius: 1,
+                boxShadow: 3,
+                p: 0.5,
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <IconButton
+                size="small"
+                onClick={() => {
+                  const row = rows.find(r => r.id === hoveredRowId);
+                  if (row) handleEditRow(row);
+                }}
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "primary.main",
+                    color: "primary.contrastText",
+                  },
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => {
+                  const row = rows.find(r => r.id === hoveredRowId);
+                  if (row) handleDeleteRow(row);
+                }}
+                sx={{
+                  "&:hover": {
+                    backgroundColor: "error.main",
+                    color: "error.contrastText",
+                  },
+                }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          )}
+        </Box>
       </Paper>
 
       <DocumentModal
