@@ -1,6 +1,6 @@
-# 🔒 Guia de Segurança - Mongo UI
+# 🔒 Guia de Segurança - Mongui
 
-Este documento descreve as medidas de segurança implementadas no Mongo UI.
+Este documento descreve as medidas de segurança implementadas no Mongui.
 
 ---
 
@@ -434,5 +434,5 @@ Em caso de problemas de segurança, entre em contato:
 
 ---
 
-**Mongo UI** - Segurança em primeiro lugar 🔒✨
+**Mongui** - Segurança em primeiro lugar 🔒✨
 

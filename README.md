@@ -1,6 +1,6 @@
-# 🍃 Mongo UI - MongoDB Web Interface
+# 🍃 Mongui - Interface Web MongoDB
 
-Interface web moderna e interativa para gerenciar bancos de dados MongoDB, similar ao MongoDB Compass.
+Interface web moderna e interativa para gerenciar bancos de dados MongoDB.
 
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 ![Version](https://img.shields.io/badge/version-1.0-blue.svg)
@@ -284,7 +284,7 @@ Quando ativo:
 ## 📁 Estrutura do Projeto
 
 ```
-mongui/
+Mongui/
 ├── app/
 │   ├── api/
 │   │   ├── health/route.ts        # Health check
@@ -409,4 +409,4 @@ Para dúvidas, sugestões ou problemas:
 
 ---
 
-**Mongo UI** - Gerenciamento MongoDB simplificado e poderoso 🍃✨
+**Mongui** - Gerenciamento MongoDB simplificado e poderoso 🍃✨

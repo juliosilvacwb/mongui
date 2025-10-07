@@ -1,6 +1,6 @@
 # 🗑️ Guia de Exclusão - Databases e Collections
 
-Este documento explica como deletar databases e collections no Mongo UI com segurança.
+Este documento explica como deletar databases e collections no Mongui com segurança.
 
 ---
 
@@ -683,7 +683,7 @@ db.produtos.drop()
 2. Right-click na collection → Drop Collection
 ```
 
-### Mongo UI
+### Mongui
 
 ```
 1. Hover → Click 🗑️
@@ -704,5 +704,5 @@ Após implementar confirmação por nome:
 
 ---
 
-**Mongo UI** - Delete com segurança! 🗑️🛡️✨
+**Mongui** - Delete com segurança! 🗑️🛡️✨
 

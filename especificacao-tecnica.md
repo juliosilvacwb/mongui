@@ -1,6 +1,6 @@
-# 📋 Especificação Técnica - Mongo UI Web
+# 📋 Especificação Técnica - Mongui
 
-**Projeto:** Interface Web para MongoDB (similar ao MongoDB Compass)  
+**Projeto:** Mongui - Interface Web para MongoDB  
 **Stack:** Next.js 14+ (App Router) + Material UI + MongoDB + TypeScript  
 **Abordagem:** Implementação sequencial e incremental
 
@@ -33,7 +33,7 @@ Criar uma interface web que permita:
 - Realizar operações CRUD em documentos
 - Executar consultas personalizadas
 - Simular o shell MongoDB via interface web
-- Proporcionar experiência similar ao MongoDB Compass
+- Proporcionar experiência profissional de gerenciamento MongoDB
 
 ### 1.2 Arquitetura
 
@@ -472,7 +472,7 @@ export default function AppBarTop({
     <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
       <Toolbar>
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          🍃 Mongo UI
+          🍃 Mongui
         </Typography>
 
         <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
@@ -549,7 +549,7 @@ import "./globals.css";
 import ThemeRegistry from "@/components/ThemeRegistry";
 
 export const metadata: Metadata = {
-  title: "Mongo UI - MongoDB Web Interface",
+  title: "Mongui - Interface Web MongoDB",
   description: "Interface web para gerenciar MongoDB",
 };
 
@@ -589,7 +589,7 @@ export default function Home() {
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
         <Typography variant="h5" gutterBottom>
-          Bem-vindo ao Mongo UI
+          Bem-vindo ao Mongui
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Selecione um database e collection no menu lateral para começar.
@@ -610,7 +610,7 @@ npm run dev
 ```
 
 **Verificar:**
-- [x] AppBar no topo com título "Mongo UI"
+- [x] AppBar no topo com título "Mongui"
 - [x] Drawer lateral fixo (vazio por enquanto)
 - [x] Área principal com mensagem de boas-vindas
 - [x] Tema escuro aplicado
@@ -628,7 +628,7 @@ npm run dev
 
 2. **`components/AppBarTop.tsx`** (57 linhas)
    - Barra superior fixa com z-index acima do drawer
-   - Título "🍃 Mongo UI"
+   - Título "🍃 Mongui"
    - Chip de status de conexão (connected/disconnected/connecting)
    - Botões: Refresh, Toggle Theme
    - Props tipadas com TypeScript
@@ -3009,7 +3009,7 @@ export default function Home() {
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
         <Typography variant="h5" gutterBottom>
-          Bem-vindo ao Mongo UI
+          Bem-vindo ao Mongui
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Selecione um database e collection no menu lateral para começar.
@@ -3525,9 +3525,9 @@ logger.error("Failed to connect to MongoDB", error);
 Criar `README.md`:
 
 ```markdown
-# 🍃 Mongo UI - MongoDB Web Interface
+# 🍃 Mongui - Interface Web MongoDB
 
-Interface web moderna para gerenciar bancos de dados MongoDB, similar ao MongoDB Compass.
+Interface web moderna para gerenciar bancos de dados MongoDB.
 
 ## 🚀 Recursos
 

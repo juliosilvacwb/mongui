@@ -1,6 +1,6 @@
-# 🎨 Guia de Tema - Mongo UI
+# 🎨 Guia de Tema - Mongui
 
-Este documento descreve o sistema de temas implementado no Mongo UI.
+Este documento descreve o sistema de temas implementado no Mongui.
 
 ---
 
@@ -462,5 +462,5 @@ export default function ExampleComponent() {
 
 ---
 
-**Desenvolvido com ❤️ para Mongo UI** 🍃✨
+**Desenvolvido com ❤️ para Mongui** 🍃✨
 

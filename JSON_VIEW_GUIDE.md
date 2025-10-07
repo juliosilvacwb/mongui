@@ -1,12 +1,12 @@
-# 📋 Guia de Visualização JSON - Mongo UI
+# 📋 Guia de Visualização JSON - Mongui
 
-Este documento descreve como usar a visualização JSON Pretty no Mongo UI.
+Este documento descreve como usar a visualização JSON Pretty no Mongui.
 
 ---
 
 ## 🎯 Visão Geral
 
-O Mongo UI oferece **duas formas de visualizar dados**:
+O Mongui oferece **duas formas de visualizar dados**:
 
 1. **📊 Tabela (Grid)** - Visualização tabelar com AG Grid
 2. **📋 JSON** - Visualização formatada e colorida do JSON
@@ -379,5 +379,5 @@ Se encontrar problemas ou tiver sugestões:
 
 ---
 
-**Mongo UI** - Visualize seus dados como quiser! 📊📋✨
+**Mongui** - Visualize seus dados como quiser! 📊📋✨
 

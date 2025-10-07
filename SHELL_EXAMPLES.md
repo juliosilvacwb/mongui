@@ -1,6 +1,6 @@
 # 💻 MongoDB Shell - Exemplos de Comandos
 
-Este documento contém exemplos de comandos que você pode executar no **MongoDB Shell** do Mongo UI.
+Este documento contém exemplos de comandos que você pode executar no **MongoDB Shell** do Mongui.
 
 ---
 
@@ -239,5 +239,5 @@ show dbs
 
 ---
 
-**Desenvolvido com ❤️ para Mongo UI**
+**Desenvolvido com ❤️ para Mongui**
 

@@ -5,7 +5,7 @@ import ThemeRegistry from "@/components/ThemeRegistry";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 export const metadata: Metadata = {
-  title: "Mongo UI - MongoDB Web Interface",
+  title: "Mongui - Interface Web MongoDB",
   description: "Interface web para gerenciar MongoDB",
 };
 

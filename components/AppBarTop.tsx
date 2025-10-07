@@ -49,7 +49,7 @@ export default function AppBarTop({
               }
             }}
           >
-            🍃 Mongo UI
+            🍃 Mongui
           </Typography>
         </Link>
         

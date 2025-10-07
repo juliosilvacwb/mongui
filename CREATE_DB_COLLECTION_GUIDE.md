@@ -1,6 +1,6 @@
 # 🗄️ Guia de Criação - Databases e Collections
 
-Este documento explica como criar databases e collections no Mongo UI.
+Este documento explica como criar databases e collections no Mongui.
 
 ---
 
@@ -60,7 +60,7 @@ O nome do database deve seguir estas regras:
 
 ### ⚠️ Nota Importante
 
-O MongoDB cria databases **automaticamente** ao inserir dados. Por isso, ao criar um database no Mongo UI, você deve informar o nome da **primeira collection**.
+O MongoDB cria databases **automaticamente** ao inserir dados. Por isso, ao criar um database no Mongui, você deve informar o nome da **primeira collection**.
 
 Isso garante que:
 - ✅ O database seja criado imediatamente
@@ -410,5 +410,5 @@ Para mais informações sobre restrições de nomes:
 
 ---
 
-**Mongo UI** - Gerencie sua estrutura MongoDB com facilidade! 🗄️✨
+**Mongui** - Gerencie sua estrutura MongoDB com facilidade! 🗄️✨
 

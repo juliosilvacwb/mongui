@@ -1,4 +1,4 @@
-# 🧭 Mongo UI Web — Especificação Técnica Completa
+# 🧭 Mongui — Especificação Técnica Completa
 
 **Base:** Next.js + Material UI + MongoDB
 **Objetivo:** Criar uma interface web semelhante ao **MongoDB Compass**, com um simulador de shell e suporte a CRUD, consultas e navegação hierárquica entre databases e coleções.
@@ -36,7 +36,7 @@
 
 * **AppBar (topo):**
 
-  * Título “Mongo UI”
+  * Título "Mongui"
   * Botão de atualizar
   * Botão de alternar tema (claro/escuro)
   * Indicador de conexão
@@ -351,5 +351,5 @@ A aplicação:
 ---
 
 **Autor:** Julio Dev
-**Versão:** 1.0 (POC Mongo UI Web)
+**Versão:** 1.0 (POC Mongui Web)
 **Stack:** Next.js • Material UI • MongoDB • TypeScript
