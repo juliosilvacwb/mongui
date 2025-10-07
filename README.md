@@ -1,6 +1,6 @@
-# 🍃 Mongui - Interface Web MongoDB
+# 🍃 Mongui - MongoDB Web Interface
 
-Interface web moderna e interativa para gerenciar bancos de dados MongoDB.
+A modern, feature-rich web interface for managing MongoDB databases - inspired by MongoDB Compass.
 
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 ![Version](https://img.shields.io/badge/version-1.0-blue.svg)
@@ -8,405 +8,889 @@ Interface web moderna e interativa para gerenciar bancos de dados MongoDB.
 
 ---
 
-## 🚀 Recursos
+## ✨ Features
 
-- ✅ **Visualização Hierárquica** - Navegue por databases e collections com interface intuitiva
-- ✅ **CRUD Completo** - Crie, edite, visualize e delete documentos
-- ✅ **Consultas Avançadas** - Execute queries MongoDB com filtros, ordenação e limite
-- ✅ **MongoDB Shell** - Console interativo com suporte a comandos MongoDB
-- ✅ **AG Grid Integration** - Visualização de dados com paginação até 100K documentos
-- ✅ **Tema Claro/Escuro** - Alterne entre temas com persistência
-- ✅ **Interface Responsiva** - Design adaptável e moderno com Material UI
-- ✅ **Copy-to-Clipboard** - Copie campos e headers facilmente
-- ✅ **Server-Side Pagination** - Performance otimizada para grandes datasets
+### Core Functionality
+- 🗄️ **Database & Collection Management** - Create, view, and delete databases and collections
+- 📊 **Document CRUD** - Full Create, Read, Update, Delete operations
+- 🔍 **Advanced Queries** - Execute MongoDB queries with filters, sorting, and limits
+- 💻 **Interactive Shell** - Built-in MongoDB shell with command history
+- 📋 **Dual View Modes** - Switch between Grid and JSON pretty-print views
+- 📄 **Server-Side Pagination** - Handle datasets up to 100K documents
+- 📋 **Copy-to-Clipboard** - Click on cells and headers to copy values
+
+### User Experience
+- 🌓 **Dark/Light Theme** - Seamless theme switching with persistence
+- 🎨 **Modern UI** - Material UI components with custom MongoDB styling
+- ⚡ **High Performance** - AG Grid Community for blazing-fast data rendering
+- 🔄 **Real-time Validation** - Instant feedback on database/collection names
+- 🛡️ **Safe Deletion** - Type-to-confirm deletion for databases and collections
+
+### Security
+- 🔒 **Read-Only Mode** - Protect production data from accidental modifications
+- 🛡️ **Error Boundaries** - Graceful error handling with recovery options
+- 📊 **Logging System** - Comprehensive logging for debugging and auditing
+- ✅ **Input Validation** - Client and server-side validation
 
 ---
 
-## 📦 Instalação
+## 🚀 Quick Start
 
-### Pré-requisitos
+### Prerequisites
 
-- **Node.js** 18.x ou superior
-- **npm** ou **yarn**
-- Acesso a uma instância **MongoDB** (Atlas, local ou Docker)
+- **Node.js** 18.x or higher
+- **npm** or **yarn**
+- **MongoDB** instance (Atlas, local, or Docker)
 
-### Passos
+### Installation
 
 ```bash
-# 1. Clone o repositório (ou extraia os arquivos)
+# Clone or download the repository
 cd mongui
 
-# 2. Instale as dependências
+# Install dependencies
 npm install
 
-# 3. Configure as variáveis de ambiente
-# Crie o arquivo .env.local na raiz do projeto
+# Create environment file
+cp .env.example .env.local
+
+# Edit .env.local with your MongoDB URI
+# See "Environment Variables" section below
 ```
 
 ---
 
-## ⚙️ Configuração
+## 🐳 MongoDB with Docker (For Testing)
 
-Crie um arquivo `.env.local` na raiz do projeto:
+### Option 1: Docker Run (Quick Start)
 
 ```bash
-# MongoDB Connection URI
-MONGODB_URI=mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/?retryWrites=true&w=majority
+# Start MongoDB container
+docker run -d \
+  --name mongodb-test \
+  -p 27017:27017 \
+  -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
+  -e MONGO_INITDB_ROOT_PASSWORD=secret \
+  mongo:latest
 
-# Read-only mode (opcional)
+# MongoDB will be available at:
+# mongodb://admin:password123@localhost:27017/
+```
+
+### Option 2: Docker Compose (Recommended)
+
+Create `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb-test
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:
+```
+
+Start the container:
+
+```bash
+# Start MongoDB
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f mongodb
+
+# Stop MongoDB
+docker-compose down
+
+# Stop and remove data
+docker-compose down -v
+```
+
+### Connection URI for Docker
+
+Add to `.env.local`:
+
+```bash
+MONGODB_URI=mongodb://admin:password123@localhost:27017/?authSource=admin
 READ_ONLY=false
 ```
 
-**Substitua** `<usuario>`, `<senha>` e `<cluster>` pelos dados da sua conexão MongoDB.
+---
 
-> ⚠️ **Importante:** O arquivo `.env.local` está no `.gitignore` e não deve ser commitado.
+## ⚙️ Environment Variables
+
+Create a `.env.local` file in the project root:
+
+```bash
+# MongoDB Connection URI (Required)
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority
+
+# Or for local MongoDB:
+# MONGODB_URI=mongodb://localhost:27017/
+
+# Or for Docker:
+# MONGODB_URI=mongodb://admin:password123@localhost:27017/?authSource=admin
+
+# Read-Only Mode (Optional, default: false)
+# Set to true to prevent all write operations
+READ_ONLY=false
+```
+
+> ⚠️ **Important:** The `.env.local` file is already in `.gitignore` and should never be committed.
 
 ---
 
-## 🏃 Executar
+## 🏃 Running the Application
+
+### Development Mode
 
 ```bash
-# Modo desenvolvimento
 npm run dev
 ```
 
-Acesse: **http://localhost:3000**
+Access: **http://localhost:3000**
+
+### Production Build
 
 ```bash
-# Build para produção
 npm run build
 npm start
 ```
 
 ---
 
-## 📖 Como Usar
+## 📖 Usage Guide
 
-### 1️⃣ Navegação por Databases e Collections
+### 1. Database & Collection Navigation
 
-1. Ao abrir a aplicação, você verá os **databases** listados no menu lateral esquerdo
-2. **Clique** em um database para expandir e ver suas **collections**
-3. **Clique** em uma collection para visualizar seus documentos
+**Create Database:**
+1. Click **"Novo Database"** button in the sidebar
+2. Enter database name (e.g., `ecommerce`)
+3. Enter initial collection name (e.g., `products`)
+4. Click **"Criar Database"**
 
-### 2️⃣ Operações CRUD
+**Create Collection:**
+1. Expand a database
+2. Click **"Nova Collection"**
+3. Enter collection name
+4. Click **"Criar Collection"**
 
-#### ➕ Criar Documento
-- Clique no botão **"Novo"**
-- Digite o documento em formato **JSON**
-- Clique em **"Salvar"**
+**Delete Database/Collection:**
+1. Hover over database or collection name
+2. Click the **trash icon** 🗑️ that appears
+3. **Type the exact name** to confirm deletion
+4. Click **"Deletar"**
 
-**Exemplo:**
-```json
-{
-  "nome": "João Silva",
-  "idade": 30,
-  "email": "joao@example.com"
-}
-```
+> ⚠️ Deletion is **IRREVERSIBLE**! Type-to-confirm prevents accidents.
 
-**Inserir Múltiplos:**
-```json
-[
-  {"nome": "Maria", "idade": 25},
-  {"nome": "Pedro", "idade": 28}
-]
-```
+### 2. Document Operations (CRUD)
 
-#### ✏️ Editar Documento
-- **Passe o mouse** sobre uma linha
-- Clique no ícone de **edição** (lápis)
-- Modifique o JSON
-- Clique em **"Salvar"**
+**View Documents:**
+- Click on a collection to view its documents
 
-#### 🗑️ Deletar Documento
-- **Passe o mouse** sobre uma linha
-- Clique no ícone de **exclusão** (lixeira)
-- **Confirme** a exclusão
+**Create Document:**
+- Click **"Novo"** button
+- Enter JSON (single object or array of objects)
+- Click **"Salvar"**
 
-#### 🔄 Atualizar Lista
-- Clique no botão de **refresh** para recarregar os documentos
+**Edit Document:**
+- Hover over a row
+- Click the **edit icon** (pencil)
+- Modify JSON
+- Click **"Salvar"**
 
-### 3️⃣ Consultas Avançadas
+**Delete Document:**
+- Hover over a row
+- Click the **delete icon** (trash)
+- Confirm deletion
 
-1. Clique em **"🔍 Consulta Avançada"** para expandir o painel
-2. Digite o **filtro** em JSON
-3. (Opcional) Configure a **ordenação**
-4. Clique em **"Executar Query"**
+### 3. View Modes
 
-**Exemplos de Filtros:**
+**Toggle between views** using the buttons at the top:
 
-```json
-// Buscar por campo específico
-{"nome": "João"}
+**Grid View (Default):**
+- Tabular display with AG Grid
+- Pagination up to 100K documents
+- Click cells to copy values
+- Click headers to copy field names
+- Hover actions for edit/delete
 
-// Operadores de comparação
-{"idade": {"$gt": 25}}
-{"idade": {"$gte": 18, "$lte": 65}}
+**JSON View:**
+- Pretty-printed JSON with syntax highlighting
+- Copy entire JSON with one click
+- Ideal for schema analysis and data export
 
-// Regex (busca por padrão)
-{"email": {"$regex": "@gmail.com$"}}
+### 4. Advanced Queries
 
-// In (múltiplos valores)
-{"status": {"$in": ["ativo", "pendente"]}}
+**Execute MongoDB Queries:**
+1. Click **"🔍 Consulta Avançada"** to expand
+2. Enter filter JSON: `{"age": {"$gt": 25}}`
+3. (Optional) Enter sort JSON: `{"age": -1}`
+4. Click **"Executar Query"**
 
-// And lógico
-{"$and": [{"idade": {"$gte": 18}}, {"status": "ativo"}]}
+**Available Operators:**
+- Comparison: `$gt`, `$gte`, `$lt`, `$lte`, `$eq`, `$ne`
+- Arrays: `$in`, `$nin`
+- Logical: `$and`, `$or`, `$not`, `$nor`
+- Strings: `$regex`, `$text`
+- Other: `$exists`
 
-// Campo existe
-{"campo_opcional": {"$exists": true}}
-```
+Click the **ℹ️ icon** next to "Consulta Avançada" for examples and documentation.
 
-**Ordenação:**
-```json
-{"idade": -1}           // Decrescente
-{"nome": 1}             // Crescente
-{"idade": -1, "nome": 1} // Múltiplos campos
-```
+> 💡 **Important:** Remember to use quotes for string values: `{"id": "123"}` not `{"id": 123}`
 
-> 💡 **Dica:** Clique no ícone **ℹ️** ao lado de "Consulta Avançada" para ver todos os operadores disponíveis
+### 5. MongoDB Shell
 
-### 4️⃣ MongoDB Shell Interativo
+**Access the shell:**
+- Click the **🖥️ Terminal icon** in the top-right corner
 
-1. Clique no ícone **🖥️ Terminal** no canto superior direito
-2. Digite comandos MongoDB
-3. Pressione **Enter** (ou **Ctrl+Enter**) para executar
-
-**Comandos Básicos:**
+**Supported Commands:**
 
 ```javascript
-// Listar databases
+// List databases
 show dbs
 
-// Listar collections
-db.seu_database.getCollectionNames()
+// List collections
+db.myDatabase.getCollectionNames()
 
-// Buscar documentos
-db.seu_database.sua_collection.find({})
-db.seu_database.sua_collection.findOne({"nome": "João"})
+// Find documents
+db.myDatabase.myCollection.find({})
+db.myDatabase.myCollection.findOne({"name": "John"})
 
-// Inserir
-db.seu_database.sua_collection.insertOne({"nome": "Maria", "idade": 25})
+// Insert
+db.myDatabase.myCollection.insertOne({"name": "Alice", "age": 30})
+db.myDatabase.myCollection.insertMany([{...}, {...}])
 
-// Atualizar
-db.seu_database.sua_collection.updateOne([
-  {"nome": "João"},
-  {"$set": {"idade": 31}}
-])
+// Update
+db.myDatabase.myCollection.updateOne([{"name": "Alice"}, {"$set": {"age": 31}}])
 
-// Deletar
-db.seu_database.sua_collection.deleteOne({"nome": "João"})
+// Delete
+db.myDatabase.myCollection.deleteOne({"name": "Alice"})
 
-// Contar
-db.seu_database.sua_collection.countDocuments({})
+// Count
+db.myDatabase.myCollection.countDocuments({})
+
+// Distinct values
+db.myDatabase.myCollection.distinct("field_name")
 ```
 
-**Atalhos do Shell:**
-- **Enter** ou **Ctrl+Enter**: Executar comando
-- **↑** (Seta para cima): Comando anterior
-- **↓** (Seta para baixo): Próximo comando
-- **Shift+Enter**: Nova linha (multiline)
-
-> 📚 **Documentação Completa:** Veja `SHELL_EXAMPLES.md` para mais exemplos
-
-### 5️⃣ Copy-to-Clipboard
-
-- **Células:** Clique em qualquer célula da tabela para copiar o valor
-- **Headers:** Clique no nome da coluna para copiar o nome do campo
-- **Shell:** Hover no resultado e clique no ícone de copiar
-
-### 6️⃣ Paginação
-
-- Selecione o número de documentos por página: **25, 50, 100, 1K, 10K, 100K**
-- Navegue entre páginas usando os controles inferiores
-- O contador mostra: **"Exibindo X-Y de Z documentos"**
-
-> ⚠️ **Nota:** Filtros e ordenação na tabela são **locais** (apenas nos dados visíveis). Para filtros **server-side**, use a **Consulta Avançada**.
-
-### 7️⃣ Tema Claro/Escuro
-
-- Clique no ícone **☀️/🌙** no canto superior direito
-- A preferência é salva automaticamente no navegador
+**Keyboard Shortcuts:**
+- `Enter` or `Ctrl+Enter` - Execute command
+- `↑` Arrow Up - Previous command
+- `↓` Arrow Down - Next command
+- `Shift+Enter` - New line (multiline)
 
 ---
 
-## 🛠️ Stack Tecnológica
+## 🔒 Security
 
-| Tecnologia | Versão | Descrição |
-|------------|--------|-----------|
-| **Next.js** | 15.x | Framework React com App Router |
-| **Material UI** | 6.x | Biblioteca de componentes UI |
-| **AG Grid Community** | 34.x | Grid de dados avançado |
-| **MongoDB Driver** | Latest | Driver oficial Node.js para MongoDB |
-| **TypeScript** | 5.x | Type safety e intellisense |
+### Read-Only Mode
 
-**Dependências Principais:**
-```json
-{
-  "next": "^15.0.0",
-  "@mui/material": "^6.0.0",
-  "ag-grid-community": "^34.0.0",
-  "ag-grid-react": "^34.0.0",
-  "mongodb": "^latest",
-  "typescript": "^5.0.0"
-}
-```
-
----
-
-## 🔒 Segurança
-
-### Modo Read-Only
-
-Para ambientes não confiáveis, habilite o modo **somente leitura**:
+Enable read-only mode to prevent all write operations:
 
 ```bash
 # .env.local
 READ_ONLY=true
 ```
 
-Quando ativo:
-- ❌ Operações de **criação** bloqueadas
-- ❌ Operações de **edição** bloqueadas
-- ❌ Operações de **exclusão** bloqueadas
-- ✅ Operações de **leitura** permitidas
+When enabled:
+- ❌ Create, update, and delete operations are blocked
+- ✅ Read operations are allowed
+- ⚠️ HTTP 403 responses for blocked operations
 
-### Boas Práticas
+### Best Practices
 
-1. ✅ **Nunca commite** o arquivo `.env.local`
-2. ✅ Use **credenciais com permissões mínimas**
-3. ✅ Configure **IP whitelist** no MongoDB Atlas
-4. ✅ Use **conexões SSL/TLS** (incluídas no URI)
-5. ✅ Revise **logs de auditoria** periodicamente
-6. ⚠️ **Não exponha** esta aplicação publicamente sem autenticação
+1. ✅ **Never commit** `.env.local` to version control
+2. ✅ Use **minimal privileges** MongoDB credentials
+3. ✅ Configure **IP whitelist** on MongoDB Atlas
+4. ✅ Use **SSL/TLS** connections (included in connection URI)
+5. ✅ Enable **READ_ONLY** mode for untrusted environments
+6. ⚠️ **Do not expose** this application publicly without authentication
+
+### MongoDB Naming Restrictions
+
+**Databases:**
+- Max 64 characters
+- Only: `a-z`, `A-Z`, `0-9`, `_`, `-`
+- Cannot be: `admin`, `local`, `config`
+- Cannot contain: `/ \ . " * < > : | ? $` or spaces
+
+**Collections:**
+- Max 120 characters
+- Cannot start with: `system.`
+- Cannot contain: `$` or null character
+- Recommended: `a-z`, `A-Z`, `0-9`, `_`, `-`
 
 ---
 
-## 📁 Estrutura do Projeto
+## 🛠️ Tech Stack
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Next.js** | 15.x | React framework with App Router |
+| **Material UI** | 6.x | UI component library |
+| **AG Grid Community** | 34.x | Advanced data grid |
+| **MongoDB Driver** | Latest | Official Node.js driver |
+| **TypeScript** | 5.x | Type safety |
+
+### Dependencies
+
+```json
+{
+  "next": "^15.0.0",
+  "@mui/material": "^6.0.0",
+  "@mui/icons-material": "^6.0.0",
+  "@emotion/react": "^11.0.0",
+  "@emotion/styled": "^11.0.0",
+  "ag-grid-community": "^34.0.0",
+  "ag-grid-react": "^34.0.0",
+  "mongodb": "latest",
+  "typescript": "^5.0.0"
+}
+```
+
+---
+
+## 📁 Project Structure
 
 ```
 Mongui/
 ├── app/
 │   ├── api/
-│   │   ├── health/route.ts        # Health check
-│   │   ├── databases/route.ts     # Listar databases
-│   │   ├── collections/route.ts   # Listar collections
-│   │   ├── documents/route.ts     # CRUD de documentos
-│   │   ├── query/route.ts         # Queries avançadas
-│   │   └── shell/route.ts         # Shell MongoDB
-│   ├── [db]/[collection]/page.tsx # Rota dinâmica de collection
-│   ├── shell/page.tsx             # Página do shell
-│   ├── layout.tsx                 # Layout principal
-│   ├── page.tsx                   # Home page
-│   ├── globals.css                # Estilos globais
-│   └── ag-grid-custom.css         # Estilos AG Grid
+│   │   ├── health/route.ts              # Health check endpoint
+│   │   ├── databases/
+│   │   │   ├── route.ts                 # List databases
+│   │   │   ├── create/route.ts          # Create database
+│   │   │   └── delete/route.ts          # Delete database
+│   │   ├── collections/
+│   │   │   ├── route.ts                 # List collections
+│   │   │   ├── create/route.ts          # Create collection
+│   │   │   └── delete/route.ts          # Delete collection
+│   │   ├── documents/route.ts           # CRUD documents
+│   │   ├── query/route.ts               # Advanced queries
+│   │   └── shell/route.ts               # MongoDB shell
+│   ├── [db]/[collection]/page.tsx       # Dynamic collection route
+│   ├── shell/page.tsx                   # Shell page
+│   ├── layout.tsx                       # Root layout
+│   ├── page.tsx                         # Home page
+│   ├── globals.css                      # Global styles
+│   ├── ag-grid-custom.css               # AG Grid theming
+│   └── icon.svg                         # Favicon (🍃)
 ├── components/
-│   ├── ThemeRegistry.tsx          # Provider de tema
-│   ├── AppBarTop.tsx              # Barra superior
-│   ├── SideDrawer.tsx             # Menu lateral
-│   ├── DocumentGrid.tsx           # Grid de documentos
-│   ├── DocumentModal.tsx          # Modal de edição
-│   ├── QueryPanel.tsx             # Painel de consultas
-│   ├── QueryHelpModal.tsx         # Modal de ajuda
-│   └── ShellConsole.tsx           # Console do shell
+│   ├── ThemeRegistry.tsx                # Theme provider
+│   ├── AppBarTop.tsx                    # Top bar
+│   ├── SideDrawer.tsx                   # Sidebar navigation
+│   ├── DocumentGrid.tsx                 # Document grid/JSON viewer
+│   ├── DocumentModal.tsx                # Document editor
+│   ├── QueryPanel.tsx                   # Query builder
+│   ├── QueryHelpModal.tsx               # Query help
+│   ├── ShellConsole.tsx                 # Interactive shell
+│   ├── JsonViewer.tsx                   # JSON viewer
+│   ├── CreateDatabaseModal.tsx          # Create DB modal
+│   ├── CreateCollectionModal.tsx        # Create collection modal
+│   ├── DeleteDatabaseModal.tsx          # Delete DB modal
+│   ├── DeleteCollectionModal.tsx        # Delete collection modal
+│   └── ErrorBoundary.tsx                # Error handling
 ├── lib/
-│   └── mongoClient.ts             # Cliente MongoDB singleton
+│   ├── mongoClient.ts                   # MongoDB singleton client
+│   ├── env.ts                           # Environment validation
+│   └── logger.ts                        # Logging system
 ├── types/
-│   └── index.ts                   # TypeScript types
-├── .env.local                     # Variáveis de ambiente (criar)
-├── .gitignore                     # Arquivos ignorados pelo git
-├── package.json                   # Dependências
-├── tsconfig.json                  # Configuração TypeScript
-├── README.md                      # Este arquivo
-├── SHELL_EXAMPLES.md              # Exemplos de comandos do shell
-└── especificacao-tecnica.md       # Documentação técnica completa
+│   └── index.ts                         # TypeScript types
+├── .env.local                           # Environment variables (create this)
+├── .gitignore                           # Git ignore
+├── package.json                         # Dependencies
+└── README.md                            # This file
 ```
+
+---
+
+## 🎯 Key Features Explained
+
+### Database & Collection Management
+
+**Create Database:**
+- Requires initial collection name (MongoDB creates DB when first collection is created)
+- Validates names according to MongoDB restrictions
+- Real-time validation feedback
+
+**Delete Database/Collection:**
+- Hover-only trash icons for clean UI
+- **Type-to-confirm** deletion (prevents accidents)
+- Cannot delete system databases (`admin`, `local`, `config`)
+- Auto-redirects if you were viewing the deleted item
+
+### Document Operations
+
+**Grid View:**
+- AG Grid Community for high performance
+- Pagination: 25, 50, 100, 1K, 10K, 100K documents per page
+- Hover-only edit/delete buttons on each row
+- Click cells to copy values
+- Click headers to copy field names
+- Server-side pagination for large datasets
+
+**JSON View:**
+- Syntax-highlighted JSON (VS Code style colors)
+- Pretty-printed with 2-space indentation
+- Copy entire JSON with one click
+- Dark/light theme adaptive colors
+- Perfect for schema analysis and data export
+
+### Advanced Queries
+
+Execute MongoDB queries directly:
+
+```json
+// Filter examples
+{"age": {"$gt": 25}}
+{"status": "active"}
+{"email": {"$regex": "@gmail.com$"}}
+{"category": {"$in": ["tech", "science"]}}
+
+// Sort examples
+{"createdAt": -1}        // Descending
+{"name": 1, "age": -1}   // Multiple fields
+```
+
+**Query Panel Features:**
+- Collapsible panel to save space
+- Filter and sort JSON inputs
+- Validates JSON syntax
+- Shows number of results
+- Help modal with all operators
+- Type safety alert (string vs number)
+
+### Interactive MongoDB Shell
+
+**Full shell simulator:**
+- Command history with ↑/↓ navigation
+- Auto-scroll to latest output
+- Execution time display
+- Timestamp for each command
+- Copy commands and results
+- Syntax highlighting (VS Code colors)
+
+**Command syntax:**
+```javascript
+db.<database>.<collection>.<operation>(<args>)
+```
+
+**Supported operations:**
+- `find`, `findOne` - Query documents
+- `insertOne`, `insertMany` - Insert documents
+- `updateOne`, `updateMany` - Update documents
+- `deleteOne`, `deleteMany` - Delete documents
+- `countDocuments` - Count documents
+- `distinct` - Get unique values
+- `getCollectionNames()` - List collections
+- `show dbs` - List databases
+
+---
+
+## 🎨 Theme System
+
+### Dark Mode (Default)
+- Background: `#1C1C1C`
+- Paper: `#2C2C2C`
+- Primary: `#00ED64` (MongoDB Green)
+- Syntax: VS Code dark theme colors
+
+### Light Mode
+- Background: `#F5F5F5`
+- Paper: `#FFFFFF`
+- Primary: `#00684A` (Dark Green)
+- Syntax: VS Code light theme colors
+
+**Toggle theme** by clicking the ☀️/🌙 icon in the top-right corner.
+
+Theme preference is saved to `localStorage` and persists across sessions.
+
+### Custom Scrollbar
+- MongoDB green on hover
+- Smooth transitions
+- Dark/light mode adaptive
+
+---
+
+## 🔍 Advanced Features
+
+### Copy-to-Clipboard
+
+**In Grid View:**
+- Click any cell → Copy cell value
+- Click any header → Copy field name
+- Feedback snackbar confirms copy
+
+**In JSON View:**
+- Click copy button → Copy entire JSON
+- ✅ icon feedback for 2 seconds
+
+**In Shell:**
+- Hover over output → Copy button appears
+- Click command → Copy command text
+
+### Pagination
+
+**Server-Side Pagination:**
+- Loads only requested page from MongoDB
+- Shows accurate total count: "Showing 1-25 of 1,234 documents"
+- Configurable page sizes
+- Efficient for large datasets
+
+**Custom Query Mode:**
+- Switches to client-side pagination
+- Shows all results from query
+- Indicates query is active
+
+### Query Help Modal
+
+Click the **ℹ️ icon** next to "Consulta Avançada" to see:
+- All MongoDB operators
+- Practical examples
+- Syntax guidelines
+- Type safety warnings
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Erro: "Por favor, adicione MONGODB_URI ao arquivo .env.local"
-- ✅ Certifique-se de criar o arquivo `.env.local` na **raiz** do projeto
-- ✅ Verifique se a variável está correta: `MONGODB_URI=mongodb+srv://...`
-- ✅ Reinicie o servidor após criar o arquivo
+### Error: "Please add MONGODB_URI to .env.local"
 
-### Erro: "Conexão com MongoDB recusada"
-- ✅ Verifique se o **IP** está na whitelist do MongoDB Atlas
-- ✅ Teste a conexão usando MongoDB Compass
-- ✅ Verifique se as **credenciais** estão corretas
+**Solution:**
+1. Create `.env.local` file in project root
+2. Add `MONGODB_URI=mongodb://...`
+3. Restart the server
 
-### Erro: "pageSize cannot exceed 100 in the MIT version"
-- ✅ Esta aplicação usa **AG Grid Community** para suportar páginas grandes
-- ✅ Se você ainda vê este erro, limpe o cache: `rm -rf .next && npm run dev`
+### Error: "Connection refused"
 
-### Tabela não carrega ou fica em branco
-- ✅ Abra o **DevTools** (F12) e verifique o console
-- ✅ Teste o endpoint diretamente: `http://localhost:3000/api/health`
-- ✅ Verifique se há erros de serialização (campos com tipos não suportados)
+**Solution:**
+1. Check if MongoDB is running
+2. Verify IP whitelist (MongoDB Atlas)
+3. Test connection with MongoDB Compass
+4. Check credentials in `.env.local`
 
-### Shell não executa comandos
-- ✅ Verifique se o comando está na **sintaxe correta**: `db.<database>.<collection>.<operation>()`
-- ✅ Use **aspas duplas** para strings: `{"campo": "valor"}`
-- ✅ Veja exemplos em `SHELL_EXAMPLES.md`
+### Error: "Database/Collection already exists"
 
----
+**Solution:**
+- Use a different name, or
+- Delete the existing database/collection first
 
-## 📝 Roadmap / Melhorias Futuras
+### Theme not switching
 
-- [ ] Autenticação de usuários
-- [ ] Múltiplas conexões MongoDB simultâneas
-- [ ] Export de dados (CSV/JSON/Excel)
-- [ ] Visualização e gerenciamento de índices
-- [ ] Aggregation Pipeline Builder visual
-- [ ] Histórico de comandos persistente (localStorage)
-- [ ] Syntax highlighting no editor JSON
-- [ ] Modo offline com cache
-- [ ] Temas customizáveis
-- [ ] Suporte a MongoDB Realm/Atlas Search
+**Solution:**
+1. Clear browser cache
+2. Check console for errors
+3. Try hard reload: `Ctrl+Shift+R`
 
----
+### Pagination shows wrong count
 
-## 🤝 Contribuindo
+**Solution:**
+- Server-side pagination is implemented
+- If using Advanced Query, count reflects query results only
+- Click "Limpar Filtro" to return to normal pagination
 
-Contribuições são bem-vindas! Para contribuir:
+### Shell commands not working
 
-1. Fork o repositório
-2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`
-3. Commit suas mudanças: `git commit -m 'Adiciona nova funcionalidade'`
-4. Push para a branch: `git push origin feature/nova-funcionalidade`
-5. Abra um Pull Request
+**Solution:**
+- Use exact syntax: `db.<database>.<collection>.<operation>(<args>)`
+- Use double quotes for strings: `{"field": "value"}`
+- Check examples in the shell help text
+- Verify JSON is valid
+
+### Cannot delete database "admin"
+
+**Solution:**
+- System databases (`admin`, `local`, `config`) are protected
+- This is intentional for safety
 
 ---
 
-## 📄 Licença
+## 📊 MongoDB Query Examples
 
-Este projeto está sob a licença **MIT**. Veja o arquivo `LICENSE` para mais detalhes.
+### Comparison Operators
+
+```javascript
+// Greater than
+{"age": {"$gt": 25}}
+
+// Greater than or equal
+{"price": {"$gte": 100}}
+
+// Less than
+{"quantity": {"$lt": 10}}
+
+// Not equal
+{"status": {"$ne": "inactive"}}
+
+// In array
+{"category": {"$in": ["electronics", "books"]}}
+```
+
+### Logical Operators
+
+```javascript
+// AND
+{"$and": [{"age": {"$gte": 18}}, {"status": "active"}]}
+
+// OR
+{"$or": [{"role": "admin"}, {"role": "moderator"}]}
+
+// NOT
+{"age": {"$not": {"$lt": 18}}}
+```
+
+### Text and Regex
+
+```javascript
+// Regex (case-insensitive)
+{"email": {"$regex": "@gmail.com$", "$options": "i"}}
+
+// Starts with
+{"name": {"$regex": "^John"}}
+
+// Contains
+{"description": {"$regex": "mongodb"}}
+```
+
+### Existence and Type
+
+```javascript
+// Field exists
+{"optional_field": {"$exists": true}}
+
+// Field does not exist
+{"deleted_at": {"$exists": false}}
+```
+
+### Sorting
+
+```javascript
+// Descending
+{"createdAt": -1}
+
+// Ascending
+{"name": 1}
+
+// Multiple fields
+{"priority": -1, "createdAt": -1}
+```
 
 ---
 
-## 👨‍💻 Autor
+## 🎮 Keyboard Shortcuts
+
+### Shell Console
+- `Enter` or `Ctrl+Enter` - Execute command
+- `↑` - Previous command (history)
+- `↓` - Next command (history)
+- `Shift+Enter` - New line (multiline input)
+
+### Modals
+- `Enter` - Confirm/Save
+- `Esc` - Cancel/Close
+
+---
+
+## 📈 Performance Tips
+
+### For Large Datasets (10K+ documents)
+
+1. **Use Grid View** - Optimized for large datasets
+2. **Adjust page size** - Start with 25-100, increase if needed
+3. **Use Advanced Queries** - Filter before loading
+4. **Index your fields** - Create indexes in MongoDB for faster queries
+
+### For Small Datasets (< 1K documents)
+
+1. **Use JSON View** - Better for schema analysis
+2. **Larger page sizes** - Load 1K-10K at once
+3. **Local filtering** - Use browser search (Ctrl+F)
+
+---
+
+## 🔐 Production Deployment
+
+### Environment Setup
+
+```bash
+# Production environment variables
+NODE_ENV=production
+MONGODB_URI=mongodb+srv://prod-user:***@cluster.mongodb.net/
+READ_ONLY=false  # or true for read-only production
+```
+
+### Recommended Setup
+
+1. **MongoDB Atlas** - Managed MongoDB hosting
+2. **Vercel/Railway** - Deploy Next.js application
+3. **Enable READ_ONLY** - For public/untrusted access
+4. **Configure IP Whitelist** - Atlas security
+5. **Use SSL/TLS** - Always (included in `mongodb+srv://`)
+6. **Monitor Logs** - Set up error tracking (Sentry, LogRocket)
+
+### Security Checklist
+
+- [ ] `.env.local` in `.gitignore`
+- [ ] MongoDB credentials are secure
+- [ ] IP whitelist configured
+- [ ] SSL/TLS enabled
+- [ ] READ_ONLY mode configured (if applicable)
+- [ ] Error monitoring set up
+- [ ] Regular backups configured
+
+---
+
+## 🧪 Testing
+
+### Test MongoDB Connection
+
+```bash
+# Health check endpoint
+curl http://localhost:3000/api/health
+
+# Expected response:
+# {"success":true,"message":"Conexão com MongoDB estabelecida com sucesso"}
+```
+
+### Test with Sample Data
+
+```javascript
+// In MongoDB Shell
+db.test_db.test_collection.insertMany([
+  {"name": "Alice", "age": 30, "city": "NYC"},
+  {"name": "Bob", "age": 25, "city": "LA"},
+  {"name": "Charlie", "age": 35, "city": "Chicago"}
+])
+
+// Then view in Mongui:
+// Navigate to: test_db → test_collection
+```
+
+---
+
+## 📦 Building from Source
+
+```bash
+# Install dependencies
+npm install
+
+# Development mode with hot reload
+npm run dev
+
+# Type checking
+npm run build
+
+# Production build
+npm run build
+npm start
+
+# Linting
+npm run lint
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! To contribute:
+
+1. Fork the repository
+2. Create a branch: `git checkout -b feature/new-feature`
+3. Commit changes: `git commit -m 'Add new feature'`
+4. Push to branch: `git push origin feature/new-feature`
+5. Open a Pull Request
+
+---
+
+## 🗺️ Roadmap
+
+### Planned Features
+- [ ] User authentication (NextAuth.js)
+- [ ] Multiple MongoDB connections
+- [ ] Data export (CSV/JSON/Excel)
+- [ ] Index management and visualization
+- [ ] Visual Aggregation Pipeline Builder
+- [ ] Persistent command history
+- [ ] JSON editor with syntax highlighting
+- [ ] Offline mode with caching
+- [ ] Custom themes
+- [ ] MongoDB Realm/Atlas Search support
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
+
+```
+MIT License
+
+Copyright (c) 2025 Julio Dev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+---
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/) - Amazing React framework
+- [Material UI](https://mui.com/) - Beautiful UI components
+- [AG Grid](https://www.ag-grid.com/) - Powerful data grid
+- [MongoDB](https://www.mongodb.com/) - Leading NoSQL database
+
+---
+
+## 📞 Support
+
+For questions, suggestions, or issues:
+- 📧 Email: [your-email@example.com]
+- 💬 Issues: [GitHub Issues](https://github.com/your-username/mongui/issues)
+- 📖 Documentation: See inline help and modals in the application
+
+---
+
+## 👨‍💻 Author
 
 **Julio Dev**  
-Desenvolvido com ❤️ usando Next.js, Material UI e MongoDB
+Developed with ❤️ using Next.js, Material UI, and MongoDB
 
 ---
 
-## 🙏 Agradecimentos
+## 🌟 Star This Project
 
-- [Next.js](https://nextjs.org/) - Framework React incrível
-- [Material UI](https://mui.com/) - Componentes UI elegantes
-- [AG Grid](https://www.ag-grid.com/) - Grid de dados poderoso
-- [MongoDB](https://www.mongodb.com/) - Banco de dados NoSQL líder
+If you find Mongui useful, please consider giving it a star on GitHub! ⭐
 
 ---
 
-## 📞 Suporte
+**🍃 Mongui** - Professional MongoDB management made simple ✨
 
-Para dúvidas, sugestões ou problemas:
-- 📧 Email: [seu-email@example.com]
-- 💬 Issues: [GitHub Issues](https://github.com/seu-usuario/mongui/issues)
-- 📖 Documentação: Veja `especificacao-tecnica.md` e `SHELL_EXAMPLES.md`
-
----
-
-**Mongui** - Gerenciamento MongoDB simplificado e poderoso 🍃✨
+**Version:** 1.0  
+**Last Updated:** October 2025
