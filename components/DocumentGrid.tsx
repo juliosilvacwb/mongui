@@ -21,6 +21,7 @@ import DocumentModal from "./DocumentModal";
 import QueryPanel from "./QueryPanel";
 import JsonViewer from "./JsonViewer";
 import { useTranslation } from "@/lib/i18n/TranslationContext";
+import { AG_GRID_LOCALE_EN, AG_GRID_LOCALE_PT } from "@/lib/i18n/agGridLocale";
 
 interface DocumentGridProps {
   dbName: string;
@@ -29,7 +30,10 @@ interface DocumentGridProps {
 
 export default function DocumentGrid({ dbName, collectionName }: DocumentGridProps) {
   const { mode } = useThemeMode();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  
+  // AG Grid locale based on current language
+  const agGridLocale = language === "pt" ? AG_GRID_LOCALE_PT : AG_GRID_LOCALE_EN;
   const [rowData, setRowData] = useState<any[]>([]);
   const [columnDefs, setColumnDefs] = useState<ColDef[]>([]);
   const [loading, setLoading] = useState(true);
@@ -545,6 +549,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
             }}
           >
             <AgGridReact
+              key={`ag-grid-${language}`}
               rowData={rowData}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
@@ -566,6 +571,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
               suppressRowClickSelection={true}
               getRowId={(params) => params.data._id}
               theme="legacy"
+              localeText={agGridLocale}
             />
           </Box>
         ) : (

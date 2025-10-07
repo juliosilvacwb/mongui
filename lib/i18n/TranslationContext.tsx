@@ -31,26 +31,19 @@ interface TranslationProviderProps {
 
 export function TranslationProvider({ children }: TranslationProviderProps) {
   const [language, setLanguageState] = useState<Language>("en");
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Load saved language from localStorage
+    // Load saved language from localStorage on mount
     const savedLang = localStorage.getItem("mongui-language") as Language | null;
     if (savedLang && (savedLang === "en" || savedLang === "pt")) {
       setLanguageState(savedLang);
     }
-    setMounted(true);
   }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem("mongui-language", lang);
   };
-
-  // Prevent hydration mismatch
-  if (!mounted) {
-    return null;
-  }
 
   const t = translations[language];
 
