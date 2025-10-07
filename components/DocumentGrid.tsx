@@ -88,8 +88,8 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
             .map((key) => ({
               field: key,
               headerName: key,
-              sortable: true,
-              filter: true,
+              sortable: false,
+              filter: false,
               resizable: true,
               width: key === "_id" ? 220 : 150,
               flex: key === "_id" ? 0 : 1,
@@ -203,8 +203,8 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
         .map((key) => ({
           field: key,
           headerName: key,
-          sortable: true,
-          filter: true,
+          sortable: false,
+          filter: false,
           resizable: true,
           width: key === "_id" ? 220 : 150,
           flex: key === "_id" ? 0 : 1,
@@ -358,11 +358,44 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
     return () => clearTimeout(timer);
   }, [rowData]);
 
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setSnackbar({ 
+        open: true, 
+        message: `"${label}" copiado para área de transferência`, 
+        severity: "success" 
+      });
+    }).catch((err) => {
+      console.error("Erro ao copiar:", err);
+      setSnackbar({ 
+        open: true, 
+        message: "Erro ao copiar para área de transferência", 
+        severity: "error" 
+      });
+    });
+  };
+
+  const handleCellClick = useCallback((params: any) => {
+    // Não copiar se for a coluna de ações
+    if (params.column.getColId() === "actions") return;
+    
+    const value = params.value;
+    const fieldName = params.column.getColId();
+    
+    // Converter valor para string
+    const textToCopy = typeof value === "object" 
+      ? JSON.stringify(value) 
+      : String(value || "");
+    
+    copyToClipboard(textToCopy, fieldName);
+  }, []);
+
   const defaultColDef = useMemo<ColDef>(() => ({
-    sortable: true,
-    filter: true,
+    sortable: false,
+    filter: false,
     resizable: true,
-  }), []);
+    onCellClicked: handleCellClick,
+  }), [handleCellClick]);
 
   return (
     <>
@@ -374,8 +407,8 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
           sx={{ mb: 2 }}
         >
           <Typography variant="body2">
-            <strong>💡 Dica:</strong> Os filtros e ordenação nas colunas funcionam apenas nos dados visíveis na página atual.
-            Para filtrar toda a collection, use a <strong>Consulta Avançada</strong> abaixo.
+            <strong>💡 Dica:</strong> Click nas células ou headers para copiar valores.
+            Use a <strong>Consulta Avançada</strong> para filtrar e ordenar toda a collection.
           </Typography>
         </Alert>
       </Collapse>
@@ -406,11 +439,11 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
               </Typography>
               {!isCustomQuery && (
                 <Tooltip 
-                  title="Filtros e ordenação nas colunas funcionam apenas nos dados desta página. Use 'Consulta Avançada' para filtrar toda a collection."
+                  title="Click nas células ou headers para copiar valores para área de transferência"
                   arrow
                 >
                   <Chip 
-                    label="Filtros Locais" 
+                    label="Click = Copiar" 
                     size="small" 
                     variant="outlined"
                     color="info"
@@ -473,6 +506,11 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
             suppressPaginationPanel={isCustomQuery}
             loading={loading}
             onPaginationChanged={onPaginationChanged}
+            onColumnHeaderClicked={(params) => {
+              if (params.column.getColId() !== "actions") {
+                copyToClipboard(params.column.getColId(), "Nome do campo");
+              }
+            }}
             domLayout="normal"
             rowHeight={52}
             headerHeight={56}

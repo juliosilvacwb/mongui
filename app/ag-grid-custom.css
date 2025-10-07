@@ -158,6 +158,20 @@
   opacity: 1;
 }
 
+/* Células clicáveis para copiar */
+.ag-theme-material .ag-cell:not(.ag-cell-focus):hover {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.ag-theme-material .ag-header-cell-label {
+  cursor: pointer !important;
+}
+
+.ag-theme-material .ag-header-cell:hover .ag-header-cell-label {
+  opacity: 0.8;
+}
+
 /* Hover na linha - DARK MODE */
 .ag-theme-material.ag-theme-dark .ag-row:hover {
   background-color: rgba(0, 237, 100, 0.05) !important;
