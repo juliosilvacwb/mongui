@@ -28,7 +28,7 @@ export const AI_PROVIDER_CONFIGS: Record<AIProvider, AIModelConfig> = {
   },
   groq: {
     provider: 'groq',
-    model: process.env.AI_MODEL || 'llama-3.1-70b-versatile', // Melhor modelo do Groq
+    model: process.env.AI_MODEL || 'llama-3.3-70b-versatile', // Modelo atual do Groq (substitui 3.1)
     maxTokens: parseInt(process.env.AI_MAX_TOKENS || '2000'),
     temperature: parseFloat(process.env.AI_TEMPERATURE || '0.1'),
     streaming: false,
@@ -47,10 +47,10 @@ export const AVAILABLE_MODELS = {
     'gpt-3.5-turbo',    // Econômico mas menos capaz
   ],
   groq: [
-    'llama-3.1-70b-versatile',  // Mais poderoso (recomendado)
-    'llama-3.1-8b-instant',     // Mais rápido
-    'mixtral-8x7b-32768',       // Alternativa boa
-    'gemma2-9b-it',             // Google Gemma
+    'llama-3.3-70b-versatile',  // Llama 3.3 - Mais recente (recomendado)
+    'llama-3.1-8b-instant',     // Llama 3.1 8B - Mais rápido
+    'mixtral-8x7b-32768',       // Mixtral - Alternativa boa
+    'gemma2-9b-it',             // Google Gemma 2
   ],
 };
 

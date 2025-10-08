@@ -26,18 +26,24 @@ export function createChatModel(): ChatOpenAI | null {
   const config = getAIConfig(provider);
 
   try {
-    const chatModel = new ChatOpenAI({
-      modelName: config.model,
+    // Configuração base
+    const chatConfig: any = {
+      model: config.model,
       temperature: config.temperature,
       maxTokens: config.maxTokens,
       timeout: config.timeout,
-      openAIApiKey: apiKey,
-      ...(provider === 'groq' && {
-        configuration: {
-          baseURL: "https://api.groq.com/openai/v1",
-        }
-      })
-    });
+      apiKey: apiKey,
+    };
+
+    // Para Groq, adicionar baseURL
+    if (provider === 'groq') {
+      chatConfig.configuration = {
+        baseURL: "https://api.groq.com/openai/v1",
+      };
+      logger.info(`Configurando Groq com baseURL: https://api.groq.com/openai/v1`);
+    }
+
+    const chatModel = new ChatOpenAI(chatConfig);
 
     logger.info(`Chat model criado: ${provider} - ${config.model}`);
     return chatModel;

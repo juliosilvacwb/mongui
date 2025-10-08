@@ -92,7 +92,7 @@ GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxx
 
 # Optional: Customize AI behavior
-AI_MODEL=gpt-4o-mini              # or llama-3.1-70b-versatile
+AI_MODEL=gpt-4o-mini              # or llama-3.3-70b-versatile
 AI_TEMPERATURE=0.1                # 0.0-1.0 (lower = more precise)
 AI_MAX_TOKENS=2000
 ```

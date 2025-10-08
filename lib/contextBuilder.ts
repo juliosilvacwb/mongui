@@ -4,7 +4,8 @@
  */
 
 import { SuggestionContext } from "./aiClient";
-import { analyzePrompt, selectScenarioPrompt } from "./prompts/promptRefiner";
+import { analyzePrompt } from "./prompts/promptRefiner";
+import { selectScenarioPrompt } from "./prompts/scenarioPrompts";
 
 /**
  * Construir descrição detalhada do schema em linguagem natural

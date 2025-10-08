@@ -49,7 +49,7 @@ export async function GET() {
         message: `IA habilitada com ${provider === 'openai' ? 'OpenAI' : 'Groq'}`,
         model: provider === 'openai' 
           ? (process.env.AI_MODEL || 'gpt-4o-mini')
-          : (process.env.AI_MODEL || 'llama-3.1-70b-versatile')
+          : (process.env.AI_MODEL || 'llama-3.3-70b-versatile')
       }
     });
   } catch (error: any) {
