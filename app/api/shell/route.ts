@@ -3,6 +3,7 @@ import clientPromise from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
 import { isReadOnly } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { parseMongoArgs } from "@/lib/jsonParser";
 
 export async function POST(request: Request) {
   try {
@@ -158,24 +159,23 @@ async function executeOperation(
 
   const collection = db.collection(collectionName);
 
-  // Parse argumentos
-  let args: any = null;
+  // Parse argumentos usando o novo parser que suporta JSON relaxed
+  let args: any[] = [];
   if (argsStr) {
     try {
-      // Substituir ObjectId() por uma representação que o JSON.parse aceita
-      const sanitized = argsStr
-        .replace(/ObjectId\("([a-f0-9]+)"\)/gi, '"$1"')
-        .replace(/ObjectId\('([a-f0-9]+)'\)/gi, '"$1"');
+      args = parseMongoArgs(argsStr);
       
-      args = JSON.parse(sanitized);
-    } catch (e) {
-      throw new Error(`JSON inválido: ${argsStr}\n\nErro: ${(e as Error).message}`);
+      // Converter ObjectId markers para ObjectId reais
+      args = args.map((arg) => convertObjectIds(arg));
+    } catch (error: any) {
+      throw new Error(`Erro ao parsear argumentos: ${error.message}\n\nArgumentos: ${argsStr}`);
     }
   }
 
   switch (operation) {
     case "find":
-      const findResult = await collection.find(args || {}).limit(50).toArray();
+      const findArg = args[0] || {};
+      const findResult = await collection.find(findArg).limit(50).toArray();
       return {
         documents: findResult.map(serializeDocument),
         count: findResult.length,
@@ -183,20 +183,23 @@ async function executeOperation(
       };
 
     case "findOne":
-      const findOneResult = await collection.findOne(args || {});
+      const findOneArg = args[0] || {};
+      const findOneResult = await collection.findOne(findOneArg);
       return findOneResult ? serializeDocument(findOneResult) : null;
 
     case "insertOne":
-      if (!args) throw new Error("insertOne() requer um documento");
-      const insertResult = await collection.insertOne(args);
+      const insertDoc = args[0];
+      if (!insertDoc) throw new Error("insertOne() requer um documento");
+      const insertResult = await collection.insertOne(insertDoc);
       return {
         acknowledged: insertResult.acknowledged,
         insertedId: insertResult.insertedId.toString(),
       };
 
     case "insertMany":
-      if (!Array.isArray(args)) throw new Error("insertMany() requer um array de documentos");
-      const insertManyResult = await collection.insertMany(args);
+      const insertDocs = args[0];
+      if (!insertDocs || !Array.isArray(insertDocs)) throw new Error("insertMany() requer um array de documentos");
+      const insertManyResult = await collection.insertMany(insertDocs);
       return {
         acknowledged: insertManyResult.acknowledged,
         insertedCount: insertManyResult.insertedCount,
@@ -206,10 +209,12 @@ async function executeOperation(
       };
 
     case "updateOne":
-      if (!Array.isArray(args) || args.length < 2) {
-        throw new Error("updateOne() requer 2 argumentos: [filter, update]");
+      const updateFilter = args[0];
+      const updateDoc = args[1];
+      if (!updateFilter || !updateDoc) {
+        throw new Error("updateOne() requer 2 argumentos: filtro e update. Ex: {id: 1}, {$set: {name: 'New'}}");
       }
-      const updateOneResult = await collection.updateOne(args[0], args[1]);
+      const updateOneResult = await collection.updateOne(updateFilter, updateDoc);
       return {
         acknowledged: updateOneResult.acknowledged,
         matchedCount: updateOneResult.matchedCount,
@@ -217,10 +222,12 @@ async function executeOperation(
       };
 
     case "updateMany":
-      if (!Array.isArray(args) || args.length < 2) {
-        throw new Error("updateMany() requer 2 argumentos: [filter, update]");
+      const updateManyFilter = args[0];
+      const updateManyDoc = args[1];
+      if (!updateManyFilter || !updateManyDoc) {
+        throw new Error("updateMany() requer 2 argumentos: filtro e update");
       }
-      const updateManyResult = await collection.updateMany(args[0], args[1]);
+      const updateManyResult = await collection.updateMany(updateManyFilter, updateManyDoc);
       return {
         acknowledged: updateManyResult.acknowledged,
         matchedCount: updateManyResult.matchedCount,
@@ -228,28 +235,30 @@ async function executeOperation(
       };
 
     case "deleteOne":
-      if (!args) throw new Error("deleteOne() requer um filtro");
-      const deleteOneResult = await collection.deleteOne(args);
+      const deleteOneArg = args[0] || {};
+      const deleteOneResult = await collection.deleteOne(deleteOneArg);
       return {
         acknowledged: deleteOneResult.acknowledged,
         deletedCount: deleteOneResult.deletedCount,
       };
 
     case "deleteMany":
-      if (!args) throw new Error("deleteMany() requer um filtro");
-      const deleteManyResult = await collection.deleteMany(args);
+      const deleteManyArg = args[0] || {};
+      const deleteManyResult = await collection.deleteMany(deleteManyArg);
       return {
         acknowledged: deleteManyResult.acknowledged,
         deletedCount: deleteManyResult.deletedCount,
       };
 
     case "countDocuments":
-      const count = await collection.countDocuments(args || {});
-      return { count };
+      const countArg = args[0] || {};
+      const count = await collection.countDocuments(countArg);
+      return count;
 
     case "distinct":
-      if (!args) throw new Error("distinct() requer um campo");
-      const distinctResult = await collection.distinct(args);
+      const distinctField = args[0];
+      if (!distinctField) throw new Error("distinct() requer um campo");
+      const distinctResult = await collection.distinct(distinctField);
       return distinctResult;
 
     default:
@@ -263,6 +272,40 @@ async function executeOperation(
         "  • countDocuments, distinct"
       );
   }
+}
+
+/**
+ * Converte recursivamente markers de ObjectId para ObjectId reais
+ */
+function convertObjectIds(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  // Se é um marker de ObjectId { $oid: "..." }
+  if (obj.$oid && typeof obj.$oid === "string") {
+    try {
+      return new ObjectId(obj.$oid);
+    } catch {
+      return obj;
+    }
+  }
+
+  // Se é um array
+  if (Array.isArray(obj)) {
+    return obj.map((item) => convertObjectIds(item));
+  }
+
+  // Se é um objeto
+  if (typeof obj === "object") {
+    const converted: any = {};
+    for (const key in obj) {
+      converted[key] = convertObjectIds(obj[key]);
+    }
+    return converted;
+  }
+
+  return obj;
 }
 
 // Serializar documento para JSON (converter ObjectId)
