@@ -3,6 +3,68 @@ import clientPromise from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
 import { isReadOnly } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { EJSON } from "bson";
+
+// Função auxiliar para converter Extended JSON em objetos MongoDB nativos
+function parseExtendedJSON(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  // Se for array, processar cada item
+  if (Array.isArray(obj)) {
+    return obj.map(item => parseExtendedJSON(item));
+  }
+
+  // Se não for objeto, retornar como está
+  if (typeof obj !== 'object') {
+    return obj;
+  }
+
+  // Detectar e converter tipos Extended JSON
+  // $date
+  if (obj.$date !== undefined) {
+    if (typeof obj.$date === 'string') {
+      return new Date(obj.$date);
+    }
+    if (obj.$date.$numberLong !== undefined) {
+      return new Date(parseInt(obj.$date.$numberLong));
+    }
+    return new Date(obj.$date);
+  }
+
+  // $oid (ObjectId)
+  if (obj.$oid !== undefined) {
+    return new ObjectId(obj.$oid);
+  }
+
+  // $numberInt
+  if (obj.$numberInt !== undefined) {
+    return parseInt(obj.$numberInt);
+  }
+
+  // $numberLong
+  if (obj.$numberLong !== undefined) {
+    return parseInt(obj.$numberLong);
+  }
+
+  // $numberDouble
+  if (obj.$numberDouble !== undefined) {
+    return parseFloat(obj.$numberDouble);
+  }
+
+  // $numberDecimal
+  if (obj.$numberDecimal !== undefined) {
+    return parseFloat(obj.$numberDecimal);
+  }
+
+  // Se for objeto normal, processar recursivamente todas as propriedades
+  const result: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    result[key] = parseExtendedJSON(value);
+  }
+  return result;
+}
 
 export async function GET(request: Request) {
   try {
@@ -85,10 +147,13 @@ export async function POST(request: Request) {
     const db = client.db(dbName);
     const collection = db.collection(collectionName);
 
+    // Converter Extended JSON para tipos nativos do MongoDB
+    const parsedDocument = parseExtendedJSON(document);
+
     // Detectar se é um array ou objeto único
-    if (Array.isArray(document)) {
+    if (Array.isArray(parsedDocument)) {
       // Inserir múltiplos documentos
-      const result = await collection.insertMany(document);
+      const result = await collection.insertMany(parsedDocument);
       return NextResponse.json({
         success: true,
         data: { 
@@ -98,7 +163,7 @@ export async function POST(request: Request) {
       });
     } else {
       // Inserir documento único
-      const result = await collection.insertOne(document);
+      const result = await collection.insertOne(parsedDocument);
       return NextResponse.json({
         success: true,
         data: { insertedId: result.insertedId.toString() },
@@ -218,8 +283,11 @@ export async function PUT(request: Request) {
     const db = client.db(dbName);
     const collection = db.collection(collectionName);
 
+    // Converter Extended JSON para tipos nativos do MongoDB
+    const parsedDocument = parseExtendedJSON(document);
+
     // Remover _id do documento de atualização se presente
-    const { _id, ...updateDoc } = document;
+    const { _id, ...updateDoc } = parsedDocument;
 
     const result = await collection.updateOne(
       { _id: new ObjectId(id) },

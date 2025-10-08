@@ -123,9 +123,14 @@ export default function DocumentModal({
       </DialogTitle>
       <DialogContent>
         {mode === "create" && (
-          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-            💡 Digite um objeto {`{...}`} ou um array de objetos {`[{...}, {...}]`}
-          </Typography>
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+              💡 Digite um objeto {`{...}`} ou um array de objetos {`[{...}, {...}]`}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+              📅 Para datas use: {`{"$date": "2024-01-15T10:30:00.000Z"}`}
+            </Typography>
+          </Box>
         )}
         
         {/* Aviso sobre validação de schema */}
