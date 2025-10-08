@@ -1,6 +1,20 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongoClient";
 
+// Interface para as opções da coleção
+interface CollectionOptions {
+  validator?: any;
+  validationLevel?: string;
+  validationAction?: string;
+}
+
+// Interface para informações da coleção
+interface CollectionInfoWithOptions {
+  name: string;
+  type: string;
+  options?: CollectionOptions;
+}
+
 // GET - Obter schema de validação de uma coleção
 export async function GET(request: Request) {
   try {
@@ -28,7 +42,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const info = collectionInfo[0];
+    const info = collectionInfo[0] as CollectionInfoWithOptions;
     const hasValidation = info.options?.validator !== undefined;
     
     return NextResponse.json({
