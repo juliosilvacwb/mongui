@@ -20,6 +20,7 @@ import DataObjectIcon from "@mui/icons-material/DataObject";
 import DocumentModal from "./DocumentModal";
 import QueryPanel from "./QueryPanel";
 import JsonViewer from "./JsonViewer";
+import CustomPagination from "./CustomPagination";
 import { useTranslation } from "@/lib/i18n/TranslationContext";
 import { AG_GRID_LOCALE_EN, AG_GRID_LOCALE_PT } from "@/lib/i18n/agGridLocale";
 
@@ -330,52 +331,6 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
     }
   };
 
-  const onPaginationChanged = useCallback((params: any) => {
-    const newPage = params.api.paginationGetCurrentPage();
-    const newPageSize = params.api.paginationGetPageSize();
-    
-    if (newPage !== currentPage || newPageSize !== paginationPageSize) {
-      setCurrentPage(newPage);
-      setPaginationPageSize(newPageSize);
-      
-      if (!isCustomQuery) {
-        fetchDocuments(newPage, newPageSize);
-      }
-    }
-    
-    // Customizar labels do seletor de pageSize
-    setTimeout(() => {
-      const selector = document.querySelector('.ag-paging-page-size-selector select');
-      if (selector) {
-        const options = selector.querySelectorAll('option');
-        options.forEach((option: any) => {
-          const value = parseInt(option.value);
-          if (value === 1000) option.textContent = '1K';
-          else if (value === 10000) option.textContent = '10K';
-          else if (value === 100000) option.textContent = '100K';
-        });
-      }
-    }, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, paginationPageSize, isCustomQuery]);
-
-  useEffect(() => {
-    // Customizar labels iniciais
-    const timer = setTimeout(() => {
-      const selector = document.querySelector('.ag-paging-page-size-selector select');
-      if (selector) {
-        const options = selector.querySelectorAll('option');
-        options.forEach((option: any) => {
-          const value = parseInt(option.value);
-          if (value === 1000) option.textContent = '1K';
-          else if (value === 10000) option.textContent = '10K';
-          else if (value === 100000) option.textContent = '100K';
-        });
-      }
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [rowData]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -553,12 +508,11 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
               rowData={rowData}
               columnDefs={columnDefs}
               defaultColDef={defaultColDef}
-              pagination={!isCustomQuery}
-              paginationPageSize={paginationPageSize}
-              paginationPageSizeSelector={[25, 50, 100, 1000, 10000, 100000]}
-              suppressPaginationPanel={isCustomQuery}
+              pagination={false}
+              suppressPaginationPanel={true}
               loading={loading}
-              onPaginationChanged={onPaginationChanged}
+              rowModelType="clientSide"
+              suppressScrollOnNewData={true}
               onColumnHeaderClicked={(params: any) => {
                 const colId = params.column?.getColId ? params.column.getColId() : null;
                 if (colId && colId !== "actions") {
@@ -581,6 +535,25 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
               title={`${dbName} → ${collectionName}`}
             />
           </Box>
+        )}
+
+        {/* Custom Pagination - Only for grid view and not in custom query mode */}
+        {viewMode === "grid" && !isCustomQuery && totalCount > 0 && (
+          <CustomPagination
+            currentPage={currentPage}
+            totalCount={totalCount}
+            pageSize={paginationPageSize}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              fetchDocuments(page, paginationPageSize);
+            }}
+            onPageSizeChange={(size) => {
+              setPaginationPageSize(size);
+              setCurrentPage(0);
+              fetchDocuments(0, size);
+            }}
+            pageSizeOptions={[25, 50, 100, 1000, 10000, 100000]}
+          />
         )}
       </Paper>
 

@@ -46,6 +46,17 @@ export const en = {
     jsonPrettyFormat: "JSON Pretty Format",
     copyJson: "Copy JSON",
     copied: "Copied!",
+    page: "Page",
+    pageSize: "Page Size",
+    firstPage: "First Page",
+    previousPage: "Previous",
+    nextPage: "Next",
+    lastPage: "Last Page",
+    tip: "Tip",
+    clickToCopyCells: "Click on cells or headers to copy values",
+    useAdvancedQuery: "Use the Advanced Query panel to filter and sort the entire collection.",
+    confirmDelete: "Do you really want to delete this document?",
+    documentsCreated: "documents created",
   },
 
   // Document Modal

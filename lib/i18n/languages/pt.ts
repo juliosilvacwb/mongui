@@ -48,6 +48,17 @@ export const pt: Translation = {
     jsonPrettyFormat: "JSON Pretty Format",
     copyJson: "Copiar JSON",
     copied: "Copiado!",
+    page: "Página",
+    pageSize: "Tamanho da Página",
+    firstPage: "Primeira Página",
+    previousPage: "Anterior",
+    nextPage: "Próxima",
+    lastPage: "Última Página",
+    tip: "Dica",
+    clickToCopyCells: "Click nas células ou headers para copiar valores",
+    useAdvancedQuery: "Use o painel de Consulta Avançada para filtrar e ordenar toda a collection.",
+    confirmDelete: "Deseja realmente excluir este documento?",
+    documentsCreated: "documentos criados",
   },
 
   // Document Modal
