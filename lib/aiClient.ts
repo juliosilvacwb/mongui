@@ -8,6 +8,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { getAIProvider, getAIApiKey } from "./env";
 import { getAIConfig, MONGODB_DBA_SYSTEM_PROMPT } from "./aiConfig";
 import { logger } from "./logger";
+import { buildFullContext } from "./contextBuilder";
 
 /**
  * Criar instância do modelo de chat LangChain
@@ -81,8 +82,8 @@ export async function generateMongoCommand(
   }
 
   try {
-    // Construir contexto detalhado
-    const contextMessage = buildContextMessage(context);
+    // Construir contexto detalhado usando context builder
+    const contextMessage = buildFullContext(context);
     
     // Construir prompt do usuário
     const userMessage = `
@@ -93,7 +94,7 @@ Por favor, gere um comando MongoDB adequado para essa solicitação, considerand
 Responda APENAS com um objeto JSON válido no formato especificado no system prompt.
 `;
 
-    logger.info(`Gerando comando para prompt: "${userPrompt}"`);
+    logger.info(`Gerando comando para prompt: "${userPrompt}" em ${context.database}.${context.collection}`);
 
     // Invocar modelo
     const messages = [
@@ -114,67 +115,6 @@ Responda APENAS com um objeto JSON válido no formato especificado no system pro
     logger.error("Erro ao gerar comando:", error);
     throw new Error(`Erro ao gerar comando: ${error.message}`);
   }
-}
-
-/**
- * Construir mensagem de contexto para a IA
- */
-function buildContextMessage(context: SuggestionContext): string {
-  let message = `
-CONTEXTO DA SOLICITAÇÃO:
-
-Database: ${context.database}
-Collection: ${context.collection}
-`;
-
-  // Schema da coleção
-  if (context.schema) {
-    message += `\nSCHEMA DE VALIDAÇÃO:\n${JSON.stringify(context.schema, null, 2)}\n`;
-    
-    // Extrair campos do schema
-    if (context.schema.$jsonSchema?.properties) {
-      const fields = Object.keys(context.schema.$jsonSchema.properties);
-      const required = context.schema.$jsonSchema.required || [];
-      
-      message += `\nCAMPOS DISPONÍVEIS:\n`;
-      fields.forEach(field => {
-        const prop = context.schema.$jsonSchema.properties[field];
-        const isRequired = required.includes(field);
-        message += `  - ${field}: ${prop.bsonType || 'any'}${isRequired ? ' (obrigatório)' : ''}`;
-        if (prop.description) {
-          message += ` - ${prop.description}`;
-        }
-        message += '\n';
-      });
-    }
-  }
-
-  // Índices disponíveis
-  if (context.indexes && context.indexes.length > 0) {
-    message += `\nÍNDICES EXISTENTES:\n`;
-    context.indexes.forEach(index => {
-      const fields = Object.keys(index.key).join(', ');
-      message += `  - ${index.name}: [${fields}]`;
-      if (index.unique) message += ' (unique)';
-      if (index.sparse) message += ' (sparse)';
-      message += '\n';
-    });
-  }
-
-  // Collections disponíveis para joins
-  if (context.availableCollections && context.availableCollections.length > 0) {
-    message += `\nOUTRAS COLLECTIONS DISPONÍVEIS (para $lookup):\n`;
-    context.availableCollections.forEach(coll => {
-      message += `  - ${coll}\n`;
-    });
-  }
-
-  // Documentos de exemplo
-  if (context.sampleDocuments && context.sampleDocuments.length > 0) {
-    message += `\nEXEMPLO DE DOCUMENTO:\n${JSON.stringify(context.sampleDocuments[0], null, 2)}\n`;
-  }
-
-  return message;
 }
 
 /**
