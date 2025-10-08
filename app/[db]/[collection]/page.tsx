@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import AppBarTop from "@/components/AppBarTop";
 import SideDrawer from "@/components/SideDrawer";
-import DocumentGrid from "@/components/DocumentGrid";
+import CollectionView from "@/components/CollectionView";
 import { useThemeMode } from "@/components/ThemeRegistry";
 
 export default function CollectionPage({
@@ -25,7 +25,7 @@ export default function CollectionPage({
       <SideDrawer />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-        <DocumentGrid dbName={db} collectionName={collection} />
+        <CollectionView dbName={db} collectionName={collection} />
       </Box>
     </Box>
   );

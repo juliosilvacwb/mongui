@@ -133,7 +133,11 @@ export default function DocumentModal({
           <Alert 
             severity="info" 
             icon={<InfoIcon />}
-            sx={{ mb: 2, mt: 1 }}
+            sx={{ 
+              mb: 2, 
+              mt: 1,
+              width: '100%'
+            }}
           >
             <Typography variant="body2" fontWeight="bold">
               Esta coleção possui validação de schema ativa
@@ -145,31 +149,57 @@ export default function DocumentModal({
             
             <Accordion 
               sx={{ 
-                mt: 1, 
+                mt: 1,
                 boxShadow: 'none',
                 '&:before': { display: 'none' },
                 bgcolor: 'transparent'
               }}
             >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <AccordionSummary 
+                expandIcon={<ExpandMoreIcon />}
+                sx={{
+                  px: 0,
+                  minHeight: '40px',
+                  '& .MuiAccordionSummary-content': {
+                    my: 1
+                  }
+                }}
+              >
                 <Typography variant="caption" fontWeight="bold">
                   Ver regras de validação
                 </Typography>
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails
+                sx={{
+                  px: 0,
+                  pt: 0,
+                  pb: 1
+                }}
+              >
                 <Box
-                  component="pre"
                   sx={{
-                    fontSize: "0.75rem",
-                    fontFamily: "monospace",
-                    bgcolor: "grey.100",
-                    p: 1,
+                    bgcolor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100',
                     borderRadius: 1,
-                    overflow: "auto",
-                    maxHeight: "200px",
+                    border: 1,
+                    borderColor: 'divider',
+                    overflow: 'hidden'
                   }}
                 >
-                  {JSON.stringify(schemaInfo.validator, null, 2)}
+                  <Box
+                    component="pre"
+                    sx={{
+                      fontSize: "0.75rem",
+                      fontFamily: "Roboto Mono, monospace",
+                      color: (theme) => theme.palette.mode === 'dark' ? 'grey.100' : 'grey.900',
+                      p: 2,
+                      m: 0,
+                      overflow: "auto",
+                      maxHeight: "200px",
+                      whiteSpace: "pre"
+                    }}
+                  >
+                    {JSON.stringify(schemaInfo.validator, null, 2)}
+                  </Box>
                 </Box>
               </AccordionDetails>
             </Accordion>
