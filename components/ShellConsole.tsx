@@ -220,6 +220,10 @@ export default function ShellConsole({ dbName }: ShellConsoleProps = {}) {
                   <br />
                   • db.&lt;collection&gt;.find({`{}`})
                   <br />
+                  • db.&lt;collection&gt;.find().sort({`{}`}).limit(n)
+                  <br />
+                  • db.&lt;collection&gt;.aggregate([...])
+                  <br />
                   • db.&lt;collection&gt;.findOne({`{}`})
                   <br />
                   • db.&lt;collection&gt;.insertOne({`{name: "Test"}`})
@@ -236,6 +240,10 @@ export default function ShellConsole({ dbName }: ShellConsoleProps = {}) {
                   <br />
                   • db.&lt;database&gt;.&lt;collection&gt;.find({`{}`})
                   <br />
+                  • db.&lt;database&gt;.&lt;collection&gt;.find().sort({`{}`}).limit(n)
+                  <br />
+                  • db.&lt;database&gt;.&lt;collection&gt;.aggregate([...])
+                  <br />
                   • db.&lt;database&gt;.&lt;collection&gt;.findOne({`{}`})
                   <br />
                   • db.&lt;database&gt;.&lt;collection&gt;.insertOne({`{name: "Test"}`})
@@ -249,13 +257,26 @@ export default function ShellConsole({ dbName }: ShellConsoleProps = {}) {
               )}
             </Typography>
             <Typography variant="body2" sx={{ mt: 2 }}>
-              # Exemplo:
+              # Exemplos:
             </Typography>
-            <Typography variant="body2" sx={{ ml: 2, color: (theme) => theme.palette.mode === "dark" ? "#4EC9B0" : "#0000FF" }}>
-              {dbName 
-                ? `db.coletas.find({"id_coleta": "12345"})` 
-                : `db.ccee.coletas.find({"id_coleta": "12345"})`
-              }
+            <Typography variant="body2" component="div" sx={{ ml: 2, color: (theme) => theme.palette.mode === "dark" ? "#4EC9B0" : "#0000FF" }}>
+              {dbName ? (
+                <>
+                  db.coletas.find({`{ id_usuario: "12345" }`})
+                  <br />
+                  db.coletas.find().sort({`{ data_coleta: -1 }`}).limit(10)
+                  <br />
+                  db.coletas.aggregate([{`{ $group: { _id: "$status", total: { $sum: 1 } } }`}])
+                </>
+              ) : (
+                <>
+                  db.ccee.coletas.find({`{ id_coleta: "12345" }`})
+                  <br />
+                  db.ccee.coletas.find().sort({`{ data_coleta: -1 }`}).limit(10)
+                  <br />
+                  db.ccee.coletas.aggregate([{`{ $group: { _id: "$status", total: { $sum: 1 } } }`}])
+                </>
+              )}
             </Typography>
           </Box>
         )}

@@ -3,7 +3,7 @@ import clientPromise from "@/lib/mongoClient";
 import { ObjectId } from "mongodb";
 import { isReadOnly } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import { parseMongoArgs } from "@/lib/jsonParser";
+import { parseMongoArgs, sanitizeMongoJSON } from "@/lib/jsonParser";
 
 export async function POST(request: Request) {
   try {
@@ -123,6 +123,8 @@ async function executeCommand(command: string, contextDb?: string): Promise<any>
       "  • show dbs\n" +
       "  • db.getCollectionNames()\n" +
       "  • db.<collection>.find({})\n" +
+      "  • db.<collection>.find().sort({}).limit(n)\n" +
+      "  • db.<collection>.aggregate([...])\n" +
       "  • db.<collection>.findOne({})\n" +
       "  • db.<collection>.insertOne({...})\n" +
       "  • db.<collection>.updateOne({}, {...})\n" +
@@ -132,6 +134,8 @@ async function executeCommand(command: string, contextDb?: string): Promise<any>
       "  • show dbs\n" +
       "  • db.<database>.getCollectionNames()\n" +
       "  • db.<database>.<collection>.find({})\n" +
+      "  • db.<database>.<collection>.find().sort({}).limit(n)\n" +
+      "  • db.<database>.<collection>.aggregate([...])\n" +
       "  • db.<database>.<collection>.findOne({})\n" +
       "  • db.<database>.<collection>.insertOne({...})\n" +
       "  • db.<database>.<collection>.updateOne({}, {...})\n" +
@@ -231,12 +235,14 @@ function parseOperationChain(chain: string): Array<{ method: string; args: any[]
     let argsStart = method.length + 1; // Após "método("
     
     // Encontrar o fechamento correspondente do parênteses
-    let depth = 1;
+    let parenDepth = 1;
+    let bracketDepth = 0;
+    let braceDepth = 0;
     let i = argsStart;
     let inString = false;
     let stringChar = "";
     
-    while (i < remaining.length && depth > 0) {
+    while (i < remaining.length && parenDepth > 0) {
       const char = remaining[i];
       const prevChar = i > 0 ? remaining[i - 1] : "";
       
@@ -251,8 +257,12 @@ function parseOperationChain(chain: string): Array<{ method: string; args: any[]
       }
       
       if (!inString) {
-        if (char === "(") depth++;
-        if (char === ")") depth--;
+        if (char === "(") parenDepth++;
+        if (char === ")") parenDepth--;
+        if (char === "[") bracketDepth++;
+        if (char === "]") bracketDepth--;
+        if (char === "{") braceDepth++;
+        if (char === "}") braceDepth--;
       }
       
       i++;
@@ -264,7 +274,14 @@ function parseOperationChain(chain: string): Array<{ method: string; args: any[]
     let args: any[] = [];
     if (argsStr.trim()) {
       try {
-        args = parseMongoArgs(argsStr);
+        // Se começa com [, é um array - não dividir em argumentos múltiplos
+        if (argsStr.trim().startsWith('[')) {
+          const sanitized = sanitizeMongoJSON(argsStr);
+          const parsed = JSON.parse(sanitized);
+          args = [parsed]; // Array completo é um único argumento
+        } else {
+          args = parseMongoArgs(argsStr);
+        }
         args = args.map((arg) => convertObjectIds(arg));
       } catch (error: any) {
         throw new Error(`Erro ao parsear argumentos de ${method}(): ${error.message}`);
@@ -306,6 +323,17 @@ async function executeSingleOperation(
       const findOneArg = args[0] || {};
       const findOneResult = await collection.findOne(findOneArg);
       return findOneResult ? serializeDocument(findOneResult) : null;
+
+    case "aggregate":
+      const pipeline = args[0];
+      if (!pipeline || !Array.isArray(pipeline)) {
+        throw new Error("aggregate() requer um array de stages. Ex: [{ $match: {...} }, { $group: {...} }]");
+      }
+      const aggregateResult = await collection.aggregate(pipeline).toArray();
+      return {
+        documents: aggregateResult.map(serializeDocument),
+        count: aggregateResult.length,
+      };
 
     case "insertOne":
       const insertDoc = args[0];
@@ -386,10 +414,12 @@ async function executeSingleOperation(
         `Operação '${operation}' não suportada.\n\n` +
         "Operações disponíveis:\n" +
         "  • find, findOne\n" +
+        "  • aggregate (com pipeline)\n" +
         "  • insertOne, insertMany\n" +
         "  • updateOne, updateMany\n" +
         "  • deleteOne, deleteMany\n" +
-        "  • countDocuments, distinct"
+        "  • countDocuments, distinct\n" +
+        "  • Chaining: find().sort().limit()"
       );
   }
 }

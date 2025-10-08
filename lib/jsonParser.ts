@@ -11,20 +11,35 @@ export function sanitizeMongoJSON(input: string): string {
 
   let sanitized = input.trim();
 
-  // Substituir chaves sem aspas por chaves com aspas
+  // PASSO 1: Proteger ObjectId() temporariamente
+  const objectIdPlaceholders: string[] = [];
+  sanitized = sanitized.replace(
+    /ObjectId\s*\(\s*["']([a-f0-9]{24})["']\s*\)/gi,
+    (match, id) => {
+      const placeholder = `__OBJECTID_${objectIdPlaceholders.length}__`;
+      objectIdPlaceholders.push(id);
+      return `"${placeholder}"`;
+    }
+  );
+
+  // PASSO 2: Substituir chaves sem aspas por chaves com aspas
   // Exemplo: { name: "João" } → { "name": "João" }
   // Exemplo: { $gt: 18 } → { "$gt": 18 }
-  
-  // Pattern para capturar chaves sem aspas
-  // Captura: palavra seguida de dois pontos (exceto se já estiver entre aspas)
   sanitized = sanitized.replace(
-    /([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g,
+    /([{,\[])\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g,
     '$1"$2":'
   );
 
-  // Tratar aspas simples como aspas duplas (comum em JS)
-  // Exemplo: { 'name': 'João' } → { "name": "João" }
+  // PASSO 3: Tratar aspas simples como aspas duplas (comum em JS)
+  // Mas cuidado para não substituir dentro de ObjectId placeholders
   sanitized = sanitized.replace(/'/g, '"');
+
+  // PASSO 4: Restaurar ObjectId placeholders com marcador especial
+  objectIdPlaceholders.forEach((id, index) => {
+    const placeholder = `"__OBJECTID_${index}__"`;
+    const replacement = `{"$oid":"${id}"}`;
+    sanitized = sanitized.replace(placeholder, replacement);
+  });
 
   return sanitized;
 }
