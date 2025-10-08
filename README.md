@@ -75,7 +75,7 @@ docker run -d \
   mongo:latest
 
 # MongoDB will be available at:
-# mongodb://admin:password123@localhost:27017/
+# mongodb://mongoadmin:secret@localhost:27017/
 ```
 
 ### Option 2: Docker Compose (Recommended)
@@ -140,7 +140,7 @@ MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/?retryWrit
 # MONGODB_URI=mongodb://localhost:27017/
 
 # Or for Docker:
-# MONGODB_URI=mongodb://admin:password123@localhost:27017/?authSource=admin
+# MONGODB_URI=mongodb://mongoadmin:secret@localhost:27017/?authSource=admin
 
 # Read-Only Mode (Optional, default: false)
 # Set to true to prevent all write operations
