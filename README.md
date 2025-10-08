@@ -15,9 +15,12 @@ A modern, feature-rich web interface for managing MongoDB databases - inspired b
 - 📊 **Document CRUD** - Full Create, Read, Update, Delete operations
 - 🔍 **Advanced Queries** - Execute MongoDB queries with filters, sorting, and limits
 - 💻 **Interactive Shell** - Built-in MongoDB shell with command history
+- 🤖 **AI-Powered Assistant** - Generate MongoDB commands from natural language (OpenAI/Groq)
 - 📋 **Dual View Modes** - Switch between Grid and JSON pretty-print views
 - 📄 **Server-Side Pagination** - Handle datasets up to 100K documents
 - 📋 **Copy-to-Clipboard** - Click on cells and headers to copy values
+- 🛡️ **Schema Validation** - View and manage MongoDB schema validation rules
+- 💾 **Index Management** - Create, view, and delete indexes with visual interface
 
 ### User Experience
 - 🌓 **Dark/Light Theme** - Seamless theme switching with persistence
@@ -52,12 +55,90 @@ cd mongui
 # Install dependencies
 npm install
 
+# Install AI dependencies (optional - for AI assistant)
+npm install @langchain/openai @langchain/core langchain
+
 # Create environment file
 cp .env.example .env.local
 
 # Edit .env.local with your MongoDB URI
 # See "Environment Variables" section below
 ```
+
+---
+
+## 🤖 AI Assistant (Optional)
+
+### Setup AI Assistant
+
+The Mongui includes an optional **AI-powered assistant** that generates MongoDB commands from natural language prompts.
+
+**Supported Providers:**
+- **Groq** (Free, fast) - Recommended for development
+- **OpenAI** (Paid, precise) - Recommended for production
+
+### Quick Setup
+
+**1. Get API Key:**
+- **Groq (Free):** https://console.groq.com/keys
+- **OpenAI (Paid):** https://platform.openai.com/api-keys
+
+**2. Add to `.env.local`:**
+```bash
+# Groq (Free - Recommended)
+GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# OR OpenAI (Paid)
+OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxx
+
+# Optional: Customize AI behavior
+AI_MODEL=gpt-4o-mini              # or llama-3.1-70b-versatile
+AI_TEMPERATURE=0.1                # 0.0-1.0 (lower = more precise)
+AI_MAX_TOKENS=2000
+```
+
+**3. Restart Server:**
+```bash
+npm run dev
+```
+
+### Using AI Assistant
+
+**1. Open Shell Tab:**
+- Navigate to any collection
+- Click "Shell" tab
+
+**2. Activate Assistant:**
+- Click ✨ button in header
+- OR press `Ctrl+Space`
+
+**3. Generate Command:**
+- Type: "find active users created in last 30 days"
+- Click "Generate" or press `Ctrl+Enter`
+- Get instant MongoDB command with explanation!
+
+### Example Prompts
+
+```
+✅ "find users with age greater than 25"
+✅ "count orders by status"
+✅ "top 10 most expensive products"
+✅ "users who haven't logged in for 90 days"
+✅ "orders with customer information"
+✅ "group sales by month"
+```
+
+### AI Features
+
+- 🎯 **Context-Aware** - Understands your schema and indexes
+- ⚡ **Smart Caching** - Instant responses for repeated prompts
+- 💡 **Performance Tips** - Suggests optimizations and indexes
+- ⚠️ **Safety Warnings** - Alerts for destructive commands
+- 🔗 **Join Suggestions** - Automatically suggests $lookup when needed
+- 📊 **Aggregation Pipelines** - Generates complex pipelines
+- 🌐 **Multi-Language** - Works with prompts in Portuguese and English
+
+**Note:** AI assistant is completely optional. All features work without it.
 
 ---
 
@@ -133,7 +214,9 @@ READ_ONLY=false
 Create a `.env.local` file in the project root:
 
 ```bash
-# MongoDB Connection URI (Required)
+# ============================================
+# MongoDB Connection (Required)
+# ============================================
 MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority
 
 # Or for local MongoDB:
@@ -142,9 +225,29 @@ MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/?retryWrit
 # Or for Docker:
 # MONGODB_URI=mongodb://mongoadmin:secret@localhost:27017/?authSource=admin
 
-# Read-Only Mode (Optional, default: false)
+# ============================================
+# Read-Only Mode (Optional)
+# ============================================
 # Set to true to prevent all write operations
 READ_ONLY=false
+
+# ============================================
+# AI Assistant (Optional)
+# ============================================
+# Choose ONE provider below (OpenAI has priority if both configured)
+
+# Option 1: Groq (Free, Fast - Recommended for development)
+# Get key at: https://console.groq.com/keys
+# GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# Option 2: OpenAI (Paid, Precise - Recommended for production)
+# Get key at: https://platform.openai.com/api-keys
+# OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxxxxxxxxxxxxx
+
+# AI Configuration (Optional)
+# AI_MODEL=gpt-4o-mini                 # or llama-3.1-70b-versatile
+# AI_TEMPERATURE=0.1                   # 0.0-1.0 (lower = more precise)
+# AI_MAX_TOKENS=2000                   # Maximum tokens in response
 ```
 
 > ⚠️ **Important:** The `.env.local` file is already in `.gitignore` and should never be committed.
@@ -215,7 +318,39 @@ npm start
 - Click the **delete icon** (trash)
 - Confirm deletion
 
-### 3. View Modes
+### 3. Collection Tabs (MongoDB Compass-like)
+
+When you open a collection, you'll see multiple tabs:
+
+**📄 Documents Tab:**
+- View, create, edit, and delete documents
+- Grid or JSON view modes
+- Advanced queries with filters and sorting
+- Pagination up to 100K documents
+- Click cells to copy values
+
+**🛡️ Validation Tab:**
+- View MongoDB schema validation rules
+- Create validation with auto-generation from existing documents
+- Edit validation rules with visual editor
+- See required fields and constraints
+- Copy schema for reuse
+
+**💾 Indexes Tab:**
+- List all indexes with properties (unique, sparse, TTL)
+- Create new indexes (single or compound)
+- Visual index builder with ordering options
+- Delete indexes (protected _id index)
+- Performance information
+
+**💻 Shell Tab:**
+- MongoDB shell with database context
+- **AI Assistant** for command generation (✨)
+- Command history with ↑/↓ navigation
+- Syntax highlighting in output
+- Copy commands and results
+
+### 4. View Modes (Documents Tab)
 
 **Toggle between views** using the buttons at the top:
 
@@ -250,36 +385,53 @@ Click the **ℹ️ icon** next to "Consulta Avançada" for examples and document
 
 > 💡 **Important:** Remember to use quotes for string values: `{"id": "123"}` not `{"id": 123}`
 
-### 5. MongoDB Shell
+### 5. MongoDB Shell with AI Assistant
 
 **Access the shell:**
-- Click the **🖥️ Terminal icon** in the top-right corner
+- Navigate to any collection → Click **"Shell"** tab
+- OR click the **🖥️ Terminal icon** in the top-right corner
 
-**Supported Commands:**
+**AI Assistant (✨):**
+- Click ✨ button or press `Ctrl+Space` to activate
+- Type natural language prompt: "find active users from last 30 days"
+- Get MongoDB command with explanation + performance tips
+- Copy or execute directly
+- Works in Portuguese and English!
+
+**Manual Commands (Supported):**
 
 ```javascript
 // List databases
 show dbs
 
-// List collections
-db.myDatabase.getCollectionNames()
+// List collections  
+db.getCollectionNames()
 
 // Find documents
-db.myDatabase.myCollection.find({})
-db.myDatabase.myCollection.findOne({"name": "John"})
+db.users.find({})
+db.getCollection("users").find({status: "active"})
+db.users.findOne({name: "John"})
 
-// Insert
-db.myDatabase.myCollection.insertOne({"name": "Alice", "age": 30})
-db.myDatabase.myCollection.insertMany([{...}, {...}])
+// Aggregations
+db.users.aggregate([
+  {$group: {_id: "$status", total: {$sum: 1}}}
+])
+
+// Insert (Extended JSON support)
+db.users.insertOne({
+  name: "Alice", 
+  age: 30,
+  createdAt: {"$date": "2024-01-15T10:00:00Z"}
+})
 
 // Update
-db.myDatabase.myCollection.updateOne([{"name": "Alice"}, {"$set": {"age": 31}}])
+db.users.updateOne({name: "Alice"}, {$set: {age: 31}})
 
 // Delete
-db.myDatabase.myCollection.deleteOne({"name": "Alice"})
+db.users.deleteOne({name: "Alice"})
 
 // Count
-db.myDatabase.myCollection.countDocuments({})
+db.users.countDocuments({status: "active"})
 
 // Distinct values
 db.myDatabase.myCollection.distinct("field_name")
@@ -339,18 +491,19 @@ When enabled:
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | **Next.js** | 15.x | React framework with App Router |
-| **Material UI** | 6.x | UI component library |
+| **Material UI** | 7.x | UI component library |
 | **AG Grid Community** | 34.x | Advanced data grid |
-| **MongoDB Driver** | Latest | Official Node.js driver |
+| **MongoDB Driver** | 6.x | Official Node.js driver |
+| **LangChain** | Latest | AI integration (OpenAI/Groq) |
 | **TypeScript** | 5.x | Type safety |
 
-### Dependencies
+### Core Dependencies
 
 ```json
 {
   "next": "^15.0.0",
-  "@mui/material": "^6.0.0",
-  "@mui/icons-material": "^6.0.0",
+  "@mui/material": "^7.0.0",
+  "@mui/icons-material": "^7.0.0",
   "@emotion/react": "^11.0.0",
   "@emotion/styled": "^11.0.0",
   "ag-grid-community": "^34.0.0",
@@ -358,6 +511,21 @@ When enabled:
   "mongodb": "latest",
   "typescript": "^5.0.0"
 }
+```
+
+### AI Dependencies (Optional)
+
+```json
+{
+  "@langchain/openai": "latest",
+  "@langchain/core": "latest",
+  "langchain": "latest"
+}
+```
+
+**Install AI dependencies:**
+```bash
+npm install @langchain/openai @langchain/core langchain
 ```
 
 ---
@@ -496,6 +664,111 @@ db.<database>.<collection>.<operation>(<args>)
 - `distinct` - Get unique values
 - `getCollectionNames()` - List collections
 - `show dbs` - List databases
+
+### AI-Powered Command Generation
+
+**What is it?**
+- Natural language → MongoDB commands
+- Powered by LangChain (OpenAI or Groq)
+- Context-aware with schema and indexes knowledge
+
+**How to use:**
+1. Navigate to collection → Shell tab
+2. Click ✨ button (or press `Ctrl+Space`)
+3. Type what you want in plain language
+4. Get MongoDB command + explanation
+
+**Example:**
+```
+You type: "find active users created in last 7 days"
+
+AI generates:
+db.users.find({ 
+  status: "active",
+  createdAt: { $gte: new Date(Date.now() - 7*24*60*60*1000) }
+}).limit(50)
+
++ Explanation of what it does
++ Performance tips (use indexes)
++ Warnings (if destructive)
+```
+
+**Features:**
+- 🧠 Understands your schema structure
+- ⚡ Smart caching (instant for repeated prompts)
+- 🎯 Detects operation type (find, aggregate, update, etc)
+- 💡 Suggests optimizations and indexes
+- ⚠️ Warns about destructive operations
+- 🔗 Generates $lookup for joins automatically
+- 🌐 Works in English and Portuguese
+
+**Keyboard shortcuts:**
+- `Ctrl+Space` - Toggle AI assistant
+- `Ctrl+Enter` - Generate command
+
+**Cost & Performance:**
+- **Groq:** 100% FREE with 30 requests/min limit
+- **OpenAI:** ~$0.0005 per command (gpt-4o-mini)
+- Cache hit rate: ~40% (instant responses)
+- Response time: 2-3s (first time), <50ms (cached)
+
+### Schema Validation Management
+
+**View Validation:**
+- See if collection has schema validation
+- View validation level (strict/moderate)
+- View validation action (error/warn)
+- See all validation rules in JSON format
+- Visual summary of required fields and constraints
+
+**Create/Edit Validation:**
+- Auto-generate schema from existing documents
+- Create manually with JSON Schema format
+- Edit existing validation rules
+- Visual editor with real-time validation
+- Copy schema for reuse
+
+**Example validation:**
+```json
+{
+  "$jsonSchema": {
+    "bsonType": "object",
+    "required": ["name", "email", "age"],
+    "properties": {
+      "name": { "bsonType": "string" },
+      "email": { 
+        "bsonType": "string",
+        "pattern": "^.+@.+\\..+$"
+      },
+      "age": { 
+        "bsonType": "int",
+        "minimum": 18,
+        "maximum": 120
+      }
+    }
+  }
+}
+```
+
+### Index Management
+
+**View Indexes:**
+- Table view with all indexes
+- Shows fields and sort order (↑↓)
+- Index properties (unique, sparse, TTL)
+- Index type (standard, text, geospatial)
+
+**Create Indexes:**
+- Visual builder for index creation
+- Support for compound indexes (multiple fields)
+- Options: unique, sparse, background
+- Custom index names
+- Real-time validation
+
+**Delete Indexes:**
+- Material-UI confirmation dialog
+- Protected _id index (cannot delete)
+- Safe deletion with confirmation
 
 ---
 
@@ -837,14 +1110,23 @@ Contributions are welcome! To contribute:
 
 ## 🗺️ Roadmap
 
+### Recently Added Features ✨
+- [x] **AI Assistant** - Generate MongoDB commands from natural language (OpenAI/Groq)
+- [x] **Schema Validation Management** - View, create, and edit validation rules
+- [x] **Index Management** - Visual interface for creating and managing indexes
+- [x] **Collection Tabs** - MongoDB Compass-like interface (Documents/Validation/Indexes/Shell)
+- [x] **Extended JSON Support** - Support for dates, ObjectIds, and special types
+- [x] **Material-UI Confirm Dialogs** - Elegant confirmation dialogs for destructive operations
+- [x] **Relaxed JSON Parser** - Accept JSON without quotes on keys
+
 ### Planned Features
 - [ ] User authentication (NextAuth.js)
 - [ ] Multiple MongoDB connections
 - [ ] Data export (CSV/JSON/Excel)
-- [ ] Index management and visualization
 - [ ] Visual Aggregation Pipeline Builder
 - [ ] Persistent command history
 - [ ] JSON editor with syntax highlighting (Monaco Editor)
+- [ ] AI command history and favorites
 - [ ] Offline mode with caching
 - [ ] Custom themes
 - [ ] More languages (Spanish, French, German, Chinese)
