@@ -306,8 +306,20 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
           setSnackbar({ open: true, message, severity: "success" });
           setCurrentPage(0);
           fetchDocuments(0, paginationPageSize);
+          setModalOpen(false);
         } else {
-          throw new Error(result.error);
+          // Se for erro de validação, mostrar mensagem especial
+          if (result.validationError) {
+            setSnackbar({ 
+              open: true, 
+              message: result.error, 
+              severity: "warning",
+            });
+          } else {
+            throw new Error(result.error);
+          }
+          // Não fechar o modal para permitir correção
+          return;
         }
       } else {
         const response = await fetch("/api/documents", {
@@ -324,12 +336,26 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
         if (result.success) {
           setSnackbar({ open: true, message: t.messages.documentUpdated, severity: "success" });
           fetchDocuments(currentPage, paginationPageSize);
+          setModalOpen(false);
         } else {
-          throw new Error(result.error);
+          // Se for erro de validação, mostrar mensagem especial
+          if (result.validationError) {
+            setSnackbar({ 
+              open: true, 
+              message: result.error, 
+              severity: "warning",
+            });
+          } else {
+            throw new Error(result.error);
+          }
+          // Não fechar o modal para permitir correção
+          return;
         }
       }
     } catch (error: any) {
       setSnackbar({ open: true, message: "Erro: " + error.message, severity: "error" });
+      // Não fechar o modal em caso de erro
+      return;
     }
   };
 
@@ -564,16 +590,25 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
         open={modalOpen}
         mode={modalMode}
         initialData={selectedRow}
+        dbName={dbName}
+        collectionName={collectionName}
         onClose={() => setModalOpen(false)}
         onSave={handleSave}
       />
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={3000}
+        autoHideDuration={snackbar.severity === "warning" || snackbar.severity === "error" ? 8000 : 3000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
+        <Alert 
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          sx={{ maxWidth: "600px" }}
+        >
+          {snackbar.message}
+        </Alert>
       </Snackbar>
     </>
   );

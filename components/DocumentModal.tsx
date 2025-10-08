@@ -10,12 +10,20 @@ import {
   TextField,
   Box,
   Typography,
+  Alert,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import InfoIcon from "@mui/icons-material/Info";
 
 interface DocumentModalProps {
   open: boolean;
   mode: "create" | "edit";
   initialData?: any;
+  dbName?: string;
+  collectionName?: string;
   onClose: () => void;
   onSave: (data: any) => void;
 }
@@ -24,6 +32,8 @@ export default function DocumentModal({
   open,
   mode,
   initialData,
+  dbName,
+  collectionName,
   onClose,
   onSave,
 }: DocumentModalProps) {
@@ -31,13 +41,41 @@ export default function DocumentModal({
     initialData ? JSON.stringify(initialData, null, 2) : "{}"
   );
   const [error, setError] = useState<string | null>(null);
+  const [schemaInfo, setSchemaInfo] = useState<any>(null);
+  const [loadingSchema, setLoadingSchema] = useState(false);
 
   useEffect(() => {
     if (open) {
       setJsonText(initialData ? JSON.stringify(initialData, null, 2) : "{}");
       setError(null);
+      
+      // Buscar schema de validação se disponível
+      if (dbName && collectionName) {
+        fetchSchema();
+      }
     }
-  }, [open, initialData]);
+  }, [open, initialData, dbName, collectionName]);
+
+  const fetchSchema = async () => {
+    setLoadingSchema(true);
+    try {
+      const response = await fetch(
+        `/api/collections/schema?db=${dbName}&collection=${collectionName}`
+      );
+      const result = await response.json();
+      
+      if (result.success && result.data.hasValidation) {
+        setSchemaInfo(result.data);
+      } else {
+        setSchemaInfo(null);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar schema:", err);
+      setSchemaInfo(null);
+    } finally {
+      setLoadingSchema(false);
+    }
+  };
 
   const handleSave = () => {
     try {
@@ -73,7 +111,6 @@ export default function DocumentModal({
       
       setError(null);
       onSave(parsed);
-      onClose();
     } catch (err: any) {
       setError("JSON inválido: " + err.message);
     }
@@ -90,6 +127,62 @@ export default function DocumentModal({
             💡 Digite um objeto {`{...}`} ou um array de objetos {`[{...}, {...}]`}
           </Typography>
         )}
+        
+        {/* Aviso sobre validação de schema */}
+        {schemaInfo && schemaInfo.hasValidation && (
+          <Alert 
+            severity="info" 
+            icon={<InfoIcon />}
+            sx={{ mb: 2, mt: 1 }}
+          >
+            <Typography variant="body2" fontWeight="bold">
+              Esta coleção possui validação de schema ativa
+            </Typography>
+            <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+              Nível: {schemaInfo.validationLevel === "strict" ? "Rigoroso" : "Moderado"} | 
+              Ação: {schemaInfo.validationAction === "error" ? "Bloquear" : "Avisar"}
+            </Typography>
+            
+            <Accordion 
+              sx={{ 
+                mt: 1, 
+                boxShadow: 'none',
+                '&:before': { display: 'none' },
+                bgcolor: 'transparent'
+              }}
+            >
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="caption" fontWeight="bold">
+                  Ver regras de validação
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Box
+                  component="pre"
+                  sx={{
+                    fontSize: "0.75rem",
+                    fontFamily: "monospace",
+                    bgcolor: "grey.100",
+                    p: 1,
+                    borderRadius: 1,
+                    overflow: "auto",
+                    maxHeight: "200px",
+                  }}
+                >
+                  {JSON.stringify(schemaInfo.validator, null, 2)}
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          </Alert>
+        )}
+
+        {/* Mensagem de erro */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <Box sx={{ mt: 1 }}>
           <TextField
             fullWidth
@@ -99,7 +192,6 @@ export default function DocumentModal({
             onChange={(e) => setJsonText(e.target.value)}
             variant="outlined"
             error={!!error}
-            helperText={error}
             placeholder={mode === "create" ? '{"nome": "Teste"} ou [{"nome": "Doc1"}, {"nome": "Doc2"}]' : '{"campo": "valor"}'}
             sx={{
               fontFamily: "monospace",

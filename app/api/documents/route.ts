@@ -105,6 +105,22 @@ export async function POST(request: Request) {
       });
     }
   } catch (error: any) {
+    // Tratar erros de validação de schema (código 121)
+    if (error.code === 121) {
+      const validationError = error.errInfo?.details?.schemaRulesNotSatisfied || [];
+      const friendlyMessage = formatValidationError(validationError);
+      
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Erro de validação: ${friendlyMessage}`,
+          validationError: true,
+          details: validationError,
+        },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       {
         success: false,
@@ -113,6 +129,63 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+// Função auxiliar para formatar erros de validação
+function formatValidationError(rules: any[]): string {
+  if (!rules || rules.length === 0) {
+    return "O documento não atende aos requisitos de validação da coleção.";
+  }
+
+  const messages: string[] = [];
+  
+  for (const rule of rules) {
+    const operatorName = rule.operatorName;
+    const properties = rule.propertiesNotSatisfied || [];
+    const missing = rule.missingProperties || [];
+    
+    if (operatorName === "properties" && properties.length > 0) {
+      for (const prop of properties) {
+        const propName = prop.propertyName;
+        const reason = prop.description || formatPropertyError(prop);
+        messages.push(`Campo '${propName}': ${reason}`);
+      }
+    }
+    
+    if (missing.length > 0) {
+      messages.push(`Campos obrigatórios ausentes: ${missing.join(", ")}`);
+    }
+    
+    if (operatorName === "bsonType" && rule.consideredType) {
+      messages.push(`Tipo inválido. Esperado: ${rule.specifiedAs?.bsonType}, Recebido: ${rule.consideredType}`);
+    }
+  }
+  
+  return messages.length > 0 ? messages.join("; ") : "Falha na validação do schema.";
+}
+
+function formatPropertyError(prop: any): string {
+  if (prop.operatorName === "bsonType") {
+    return `tipo esperado '${prop.specifiedAs?.bsonType}', mas recebeu '${prop.consideredValue !== undefined ? typeof prop.consideredValue : "undefined"}'`;
+  }
+  
+  if (prop.operatorName === "pattern") {
+    return `deve corresponder ao padrão: ${prop.specifiedAs?.pattern}`;
+  }
+  
+  if (prop.operatorName === "minimum") {
+    return `deve ser no mínimo ${prop.specifiedAs?.minimum}`;
+  }
+  
+  if (prop.operatorName === "maximum") {
+    return `deve ser no máximo ${prop.specifiedAs?.maximum}`;
+  }
+  
+  if (prop.operatorName === "enum") {
+    return `deve ser um dos valores: ${prop.specifiedAs?.enum?.join(", ")}`;
+  }
+  
+  return prop.reason || "validação falhou";
 }
 
 // PUT - Atualizar documento
@@ -158,6 +231,22 @@ export async function PUT(request: Request) {
       data: { modifiedCount: result.modifiedCount },
     });
   } catch (error: any) {
+    // Tratar erros de validação de schema (código 121)
+    if (error.code === 121) {
+      const validationError = error.errInfo?.details?.schemaRulesNotSatisfied || [];
+      const friendlyMessage = formatValidationError(validationError);
+      
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Erro de validação: ${friendlyMessage}`,
+          validationError: true,
+          details: validationError,
+        },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       {
         success: false,
