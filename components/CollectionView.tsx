@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Box, Tabs, Tab, Paper, Typography, Alert, IconButton, Tooltip, Snackbar, TextField, Button, CircularProgress } from "@mui/material";
+import { Box, Tabs, Tab, Paper, Typography, Alert, IconButton, Tooltip, Snackbar, TextField, Button, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, Dialog, DialogTitle, DialogContent, DialogActions, FormControlLabel, Switch, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import DescriptionIcon from "@mui/icons-material/Description";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -10,6 +10,9 @@ import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
 import AddIcon from "@mui/icons-material/Add";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
+import StorageIcon from "@mui/icons-material/Storage";
+import DeleteIcon from "@mui/icons-material/Delete";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import DocumentGrid from "./DocumentGrid";
 
 interface CollectionViewProps {
@@ -53,9 +56,22 @@ export default function CollectionView({
   const [validationError, setValidationError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Estados para Indexes
+  const [indexes, setIndexes] = useState<any[]>([]);
+  const [loadingIndexes, setLoadingIndexes] = useState(false);
+  const [createIndexDialogOpen, setCreateIndexDialogOpen] = useState(false);
+  const [newIndexFields, setNewIndexFields] = useState<Array<{field: string, order: number}>>([{field: "", order: 1}]);
+  const [newIndexOptions, setNewIndexOptions] = useState({
+    name: "",
+    unique: false,
+    sparse: false,
+    background: true
+  });
 
   useEffect(() => {
     fetchSchema();
+    fetchIndexes();
   }, [dbName, collectionName]);
 
   const fetchSchema = async () => {
@@ -81,6 +97,15 @@ export default function CollectionView({
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
+    
+    // Recarregar dados quando mudar para aba específica
+    if (newValue === 1) {
+      // Aba Validation
+      fetchSchema();
+    } else if (newValue === 2) {
+      // Aba Indexes
+      fetchIndexes();
+    }
   };
 
   const copySchemaToClipboard = () => {
@@ -179,6 +204,133 @@ export default function CollectionView({
     }
   };
 
+  // ============ Funções para Indexes ============
+  
+  const fetchIndexes = async () => {
+    setLoadingIndexes(true);
+    try {
+      const response = await fetch(
+        `/api/collections/indexes?db=${dbName}&collection=${collectionName}`
+      );
+      const result = await response.json();
+
+      console.log("Resposta da API de índices:", result);
+
+      if (result.success) {
+        console.log("Índices carregados:", result.data.indexes);
+        setIndexes(result.data.indexes || []);
+      } else {
+        console.error("Erro ao carregar índices:", result.error);
+        setIndexes([]);
+        setSnackbarMessage("Erro ao carregar índices: " + result.error);
+        setSnackbarOpen(true);
+      }
+    } catch (err: any) {
+      console.error("Erro ao buscar índices:", err);
+      setIndexes([]);
+      setSnackbarMessage("Erro ao buscar índices: " + err.message);
+      setSnackbarOpen(true);
+    } finally {
+      setLoadingIndexes(false);
+    }
+  };
+
+  const handleCreateIndex = async () => {
+    try {
+      // Validar campos
+      const validFields = newIndexFields.filter(f => f.field.trim() !== "");
+      if (validFields.length === 0) {
+        setSnackbarMessage("Adicione pelo menos um campo ao índice");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      // Montar objeto de keys
+      const keys: any = {};
+      validFields.forEach(f => {
+        keys[f.field] = f.order;
+      });
+
+      // Montar options
+      const options: any = { background: newIndexOptions.background };
+      if (newIndexOptions.name) options.name = newIndexOptions.name;
+      if (newIndexOptions.unique) options.unique = true;
+      if (newIndexOptions.sparse) options.sparse = true;
+
+      const response = await fetch("/api/collections/indexes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          db: dbName,
+          collection: collectionName,
+          keys,
+          options
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSnackbarMessage(`Índice ${result.data.indexName} criado com sucesso!`);
+        setSnackbarOpen(true);
+        setCreateIndexDialogOpen(false);
+        // Reset form
+        setNewIndexFields([{field: "", order: 1}]);
+        setNewIndexOptions({name: "", unique: false, sparse: false, background: true});
+        // Recarregar índices com pequeno delay para garantir que foi criado
+        setTimeout(() => {
+          fetchIndexes();
+        }, 500);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      setSnackbarMessage("Erro ao criar índice: " + error.message);
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleDeleteIndex = async (indexName: string) => {
+    if (!confirm(`Deseja realmente excluir o índice "${indexName}"?`)) return;
+
+    try {
+      const response = await fetch(
+        `/api/collections/indexes?db=${dbName}&collection=${collectionName}&indexName=${indexName}`,
+        { method: "DELETE" }
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        setSnackbarMessage(`Índice ${indexName} removido com sucesso!`);
+        setSnackbarOpen(true);
+        // Recarregar índices com pequeno delay
+        setTimeout(() => {
+          fetchIndexes();
+        }, 500);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      setSnackbarMessage("Erro ao remover índice: " + error.message);
+      setSnackbarOpen(true);
+    }
+  };
+
+  const addIndexField = () => {
+    setNewIndexFields([...newIndexFields, {field: "", order: 1}]);
+  };
+
+  const removeIndexField = (index: number) => {
+    const updated = newIndexFields.filter((_, i) => i !== index);
+    setNewIndexFields(updated.length > 0 ? updated : [{field: "", order: 1}]);
+  };
+
+  const updateIndexField = (index: number, field: string, order: number) => {
+    const updated = [...newIndexFields];
+    updated[index] = {field, order};
+    setNewIndexFields(updated);
+  };
+
   return (
     <Box sx={{ width: "100%" }}>
       <Box 
@@ -218,6 +370,13 @@ export default function CollectionView({
             label="Validation"
             id="collection-tab-1"
             aria-controls="collection-tabpanel-1"
+          />
+          <Tab
+            icon={<StorageIcon sx={{ fontSize: 20 }} />}
+            iconPosition="start"
+            label="Indexes"
+            id="collection-tab-2"
+            aria-controls="collection-tabpanel-2"
           />
         </Tabs>
       </Box>
@@ -480,6 +639,213 @@ export default function CollectionView({
           )}
         </Paper>
       </TabPanel>
+
+      <TabPanel value={currentTab} index={2}>
+        <Paper sx={{ p: 3, mt: 2 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+            <Typography variant="h6" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <StorageIcon color="primary" />
+              Índices da Coleção
+              {indexes.length > 0 && (
+                <Chip label={`${indexes.length} índice${indexes.length !== 1 ? 's' : ''}`} size="small" />
+              )}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Tooltip title="Atualizar lista">
+                <IconButton onClick={fetchIndexes} disabled={loadingIndexes}>
+                  <RefreshIcon />
+                </IconButton>
+              </Tooltip>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setCreateIndexDialogOpen(true)}
+              >
+                Criar Índice
+              </Button>
+            </Box>
+          </Box>
+
+          {loadingIndexes ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : indexes.length === 0 ? (
+            <Box sx={{ textAlign: "center", py: 6 }}>
+              <StorageIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                Nenhum Índice Encontrado
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Esta coleção não possui índices configurados.
+              </Typography>
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Nome</strong></TableCell>
+                    <TableCell><strong>Campos</strong></TableCell>
+                    <TableCell><strong>Tipo</strong></TableCell>
+                    <TableCell><strong>Propriedades</strong></TableCell>
+                    <TableCell align="right"><strong>Ações</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {indexes.map((index) => (
+                    <TableRow key={index.name} hover>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+                          {index.name}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                          {Object.entries(index.key).map(([field, order]: [string, any]) => (
+                            <Chip
+                              key={field}
+                              label={`${field}: ${order === 1 ? "↑" : order === -1 ? "↓" : order}`}
+                              size="small"
+                              variant="outlined"
+                            />
+                          ))}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        {index.textIndexVersion ? (
+                          <Chip label="Text" size="small" color="info" />
+                        ) : index["2dsphereIndexVersion"] ? (
+                          <Chip label="2dsphere" size="small" color="info" />
+                        ) : (
+                          <Chip label="Standard" size="small" />
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                          {index.unique && <Chip label="Unique" size="small" color="primary" />}
+                          {index.sparse && <Chip label="Sparse" size="small" color="secondary" />}
+                          {index.partialFilterExpression && <Chip label="Partial" size="small" />}
+                          {index.expireAfterSeconds !== undefined && (
+                            <Chip label={`TTL: ${index.expireAfterSeconds}s`} size="small" color="warning" />
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell align="right">
+                        {index.name !== "_id_" && (
+                          <Tooltip title="Excluir índice">
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleDeleteIndex(index.name)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Paper>
+      </TabPanel>
+
+      {/* Dialog para criar índice */}
+      <Dialog open={createIndexDialogOpen} onClose={() => setCreateIndexDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Criar Novo Índice</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Campos do Índice
+            </Typography>
+            {newIndexFields.map((field, index) => (
+              <Box key={index} sx={{ display: "flex", gap: 2, mb: 2 }}>
+                <TextField
+                  label="Nome do Campo"
+                  value={field.field}
+                  onChange={(e) => updateIndexField(index, e.target.value, field.order)}
+                  fullWidth
+                  placeholder="ex: nome, email, data"
+                />
+                <FormControl sx={{ minWidth: 150 }}>
+                  <InputLabel>Ordem</InputLabel>
+                  <Select
+                    value={field.order}
+                    label="Ordem"
+                    onChange={(e) => updateIndexField(index, field.field, e.target.value as number)}
+                  >
+                    <MenuItem value={1}>Crescente (1)</MenuItem>
+                    <MenuItem value={-1}>Decrescente (-1)</MenuItem>
+                    <MenuItem value="text">Texto</MenuItem>
+                  </Select>
+                </FormControl>
+                <IconButton 
+                  color="error" 
+                  onClick={() => removeIndexField(index)}
+                  disabled={newIndexFields.length === 1}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            ))}
+            <Button startIcon={<AddIcon />} onClick={addIndexField} size="small">
+              Adicionar Campo
+            </Button>
+
+            <Typography variant="subtitle2" gutterBottom sx={{ mt: 3 }}>
+              Opções
+            </Typography>
+            <TextField
+              label="Nome do Índice (opcional)"
+              value={newIndexOptions.name}
+              onChange={(e) => setNewIndexOptions({...newIndexOptions, name: e.target.value})}
+              fullWidth
+              sx={{ mb: 2 }}
+              placeholder="Se não especificado, será gerado automaticamente"
+            />
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={newIndexOptions.unique}
+                    onChange={(e) => setNewIndexOptions({...newIndexOptions, unique: e.target.checked})}
+                  />
+                }
+                label="Único (Unique) - Não permite valores duplicados"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={newIndexOptions.sparse}
+                    onChange={(e) => setNewIndexOptions({...newIndexOptions, sparse: e.target.checked})}
+                  />
+                }
+                label="Esparso (Sparse) - Indexa apenas documentos que possuem o campo"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={newIndexOptions.background}
+                    onChange={(e) => setNewIndexOptions({...newIndexOptions, background: e.target.checked})}
+                  />
+                }
+                label="Em segundo plano (Background) - Recomendado"
+              />
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateIndexDialogOpen(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleCreateIndex} variant="contained">
+            Criar Índice
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbarOpen}
