@@ -39,7 +39,15 @@ export async function POST(request: Request) {
 
 async function executeCommand(command: string, contextDb?: string): Promise<any> {
   const client = await clientPromise;
-  const trimmedCommand = command.trim();
+  let trimmedCommand = command.trim();
+
+  // Pré-processar: transformar db.getCollection("nome") em db.nome
+  // Suporta: db.getCollection("users") -> db.users
+  // Suporta: db.database.getCollection("users") -> db.database.users
+  trimmedCommand = trimmedCommand.replace(
+    /\.getCollection\(["']([a-zA-Z0-9_-]+)["']\)/g,
+    '.$1'
+  );
 
   // show dbs / show databases
   if (trimmedCommand === "show dbs" || trimmedCommand === "show databases") {
@@ -123,6 +131,7 @@ async function executeCommand(command: string, contextDb?: string): Promise<any>
       "  • show dbs\n" +
       "  • db.getCollectionNames()\n" +
       "  • db.<collection>.find({})\n" +
+      "  • db.getCollection(\"<collection>\").find({})\n" +
       "  • db.<collection>.find().sort({}).limit(n)\n" +
       "  • db.<collection>.aggregate([...])\n" +
       "  • db.<collection>.findOne({})\n" +
@@ -134,6 +143,7 @@ async function executeCommand(command: string, contextDb?: string): Promise<any>
       "  • show dbs\n" +
       "  • db.<database>.getCollectionNames()\n" +
       "  • db.<database>.<collection>.find({})\n" +
+      "  • db.<database>.getCollection(\"<collection>\").find({})\n" +
       "  • db.<database>.<collection>.find().sort({}).limit(n)\n" +
       "  • db.<database>.<collection>.aggregate([...])\n" +
       "  • db.<database>.<collection>.findOne({})\n" +

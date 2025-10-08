@@ -221,6 +221,8 @@ export default function ShellConsole({ dbName, embedded = false }: ShellConsoleP
                   <br />
                   • db.&lt;collection&gt;.find({`{}`})
                   <br />
+                  • db.getCollection("&lt;collection&gt;").find({`{}`})
+                  <br />
                   • db.&lt;collection&gt;.find().sort({`{}`}).limit(n)
                   <br />
                   • db.&lt;collection&gt;.aggregate([...])
@@ -240,6 +242,8 @@ export default function ShellConsole({ dbName, embedded = false }: ShellConsoleP
                   • db.&lt;database&gt;.getCollectionNames()
                   <br />
                   • db.&lt;database&gt;.&lt;collection&gt;.find({`{}`})
+                  <br />
+                  • db.&lt;database&gt;.getCollection("&lt;collection&gt;").find({`{}`})
                   <br />
                   • db.&lt;database&gt;.&lt;collection&gt;.find().sort({`{}`}).limit(n)
                   <br />
@@ -265,7 +269,7 @@ export default function ShellConsole({ dbName, embedded = false }: ShellConsoleP
                 <>
                   db.users.find({`{ id_usuario: "12345" }`})
                   <br />
-                  db.users.find().sort({`{ data: -1 }`}).limit(10)
+                  db.getCollection("users").find().sort({`{ data: -1 }`}).limit(10)
                   <br />
                   db.users.aggregate([{`{ $group: { _id: "$status", total: { $sum: 1 } } }`}])
                 </>
@@ -273,7 +277,7 @@ export default function ShellConsole({ dbName, embedded = false }: ShellConsoleP
                 <>
                   db.ccee.users.find({`{ id_coleta: "12345" }`})
                   <br />
-                  db.ccee.users.find().sort({`{ data: -1 }`}).limit(10)
+                  db.ccee.getCollection("users").find().sort({`{ data: -1 }`}).limit(10)
                   <br />
                   db.ccee.users.aggregate([{`{ $group: { _id: "$status", total: { $sum: 1 } } }`}])
                 </>
