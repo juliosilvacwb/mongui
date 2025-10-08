@@ -29,10 +29,10 @@ export async function GET(request: Request) {
     // Obter estatísticas dos índices (opcional, pode falhar em algumas versões)
     let indexSizes = {};
     try {
-      const stats = await collection.stats();
+      const stats = await db.command({ collStats: collectionName });
       indexSizes = stats.indexSizes || {};
-    } catch (statsError) {
-      logger.warn("Não foi possível obter estatísticas dos índices:", statsError);
+    } catch (statsError: any) {
+      logger.warn("Não foi possível obter estatísticas dos índices:", statsError.message);
     }
     
     return NextResponse.json({
