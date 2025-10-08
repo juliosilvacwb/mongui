@@ -14,6 +14,7 @@ import StorageIcon from "@mui/icons-material/Storage";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DocumentGrid from "./DocumentGrid";
+import ConfirmDialog from "./ConfirmDialog";
 
 interface CollectionViewProps {
   dbName: string;
@@ -67,6 +68,10 @@ export default function CollectionView({
     unique: false,
     sparse: false,
     background: true
+  });
+  const [confirmDeleteIndex, setConfirmDeleteIndex] = useState<{open: boolean, indexName: string}>({
+    open: false,
+    indexName: ""
   });
 
   useEffect(() => {
@@ -290,8 +295,13 @@ export default function CollectionView({
     }
   };
 
-  const handleDeleteIndex = async (indexName: string) => {
-    if (!confirm(`Deseja realmente excluir o índice "${indexName}"?`)) return;
+  const handleDeleteIndexClick = (indexName: string) => {
+    setConfirmDeleteIndex({ open: true, indexName });
+  };
+
+  const handleDeleteIndexConfirm = async () => {
+    const indexName = confirmDeleteIndex.indexName;
+    setConfirmDeleteIndex({ open: false, indexName: "" });
 
     try {
       const response = await fetch(
@@ -737,7 +747,7 @@ export default function CollectionView({
                             <IconButton
                               size="small"
                               color="error"
-                              onClick={() => handleDeleteIndex(index.name)}
+                              onClick={() => handleDeleteIndexClick(index.name)}
                             >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
@@ -846,6 +856,17 @@ export default function CollectionView({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmDialog
+        open={confirmDeleteIndex.open}
+        title="Excluir Índice"
+        message={`Deseja realmente excluir o índice "${confirmDeleteIndex.indexName}"? Esta ação não pode ser desfeita.`}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        severity="error"
+        onConfirm={handleDeleteIndexConfirm}
+        onCancel={() => setConfirmDeleteIndex({ open: false, indexName: "" })}
+      />
 
       <Snackbar
         open={snackbarOpen}

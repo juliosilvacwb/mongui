@@ -23,6 +23,7 @@ import JsonViewer from "./JsonViewer";
 import CustomPagination from "./CustomPagination";
 import { useTranslation } from "@/lib/i18n/TranslationContext";
 import { AG_GRID_LOCALE_EN, AG_GRID_LOCALE_PT } from "@/lib/i18n/agGridLocale";
+import ConfirmDialog from "./ConfirmDialog";
 
 interface DocumentGridProps {
   dbName: string;
@@ -55,6 +56,11 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
     open: false,
     message: "",
     severity: "success",
+  });
+  
+  const [confirmDelete, setConfirmDelete] = useState<{open: boolean, row: any}>({
+    open: false,
+    row: null
   });
 
   // Verificar se já viu o alerta antes
@@ -141,7 +147,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
                   </IconButton>
                   <IconButton
                     size="small"
-                    onClick={() => handleDeleteRow(params.data)}
+                    onClick={() => handleDeleteRowClick(params.data)}
                     sx={{
                       "&:hover": {
                         backgroundColor: "error.main",
@@ -182,8 +188,13 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
     setModalOpen(true);
   };
 
-  const handleDeleteRow = async (row: any) => {
-    if (!confirm("Deseja realmente excluir este documento?")) return;
+  const handleDeleteRowClick = (row: any) => {
+    setConfirmDelete({ open: true, row });
+  };
+
+  const handleDeleteRowConfirm = async () => {
+    const row = confirmDelete.row;
+    setConfirmDelete({ open: false, row: null });
     
     try {
       const response = await fetch(
@@ -256,7 +267,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
               </IconButton>
               <IconButton
                 size="small"
-                onClick={() => handleDeleteRow(params.data)}
+                onClick={() => handleDeleteRowClick(params.data)}
                 sx={{
                   "&:hover": {
                     backgroundColor: "error.main",
@@ -594,6 +605,17 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
         collectionName={collectionName}
         onClose={() => setModalOpen(false)}
         onSave={handleSave}
+      />
+
+      <ConfirmDialog
+        open={confirmDelete.open}
+        title="Excluir Documento"
+        message="Deseja realmente excluir este documento? Esta ação não pode ser desfeita."
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        severity="error"
+        onConfirm={handleDeleteRowConfirm}
+        onCancel={() => setConfirmDelete({ open: false, row: null })}
       />
 
       <Snackbar
