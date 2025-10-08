@@ -774,7 +774,7 @@ export default function CollectionView({
 
       <TabPanel value={currentTab} index={3}>
         <Box sx={{ mt: 2 }}>
-          <ShellConsole dbName={dbName} embedded={true} />
+          <ShellConsole dbName={dbName} collectionName={collectionName} embedded={true} />
         </Box>
       </TabPanel>
 

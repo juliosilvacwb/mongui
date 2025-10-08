@@ -13,6 +13,8 @@ import {
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ClearIcon from "@mui/icons-material/Clear";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import AIAssistant from "./AIAssistant";
 
 interface ShellOutput {
   command: string;
@@ -24,15 +26,17 @@ interface ShellOutput {
 
 interface ShellConsoleProps {
   dbName?: string;
+  collectionName?: string; // Collection específica quando dentro de uma collection view
   embedded?: boolean; // Se true, ajusta altura para modo embedded (dentro de aba)
 }
 
-export default function ShellConsole({ dbName, embedded = false }: ShellConsoleProps = {}) {
+export default function ShellConsole({ dbName, collectionName, embedded = false }: ShellConsoleProps = {}) {
   const [command, setCommand] = useState("");
   const [history, setHistory] = useState<ShellOutput[]>([]);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [loading, setLoading] = useState(false);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
   const outputRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll para o final quando novo output é adicionado
@@ -91,6 +95,13 @@ export default function ShellConsole({ dbName, embedded = false }: ShellConsoleP
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Ctrl+Space para toggle AI Assistant
+    if (e.key === " " && e.ctrlKey) {
+      e.preventDefault();
+      setShowAIAssistant(!showAIAssistant);
+      return;
+    }
+
     // Ctrl+Enter para executar
     if (e.key === "Enter" && e.ctrlKey) {
       e.preventDefault();
@@ -151,6 +162,19 @@ export default function ShellConsole({ dbName, embedded = false }: ShellConsoleP
     return JSON.stringify(data, null, 2);
   };
 
+  const handleAICommandGenerated = (generatedCommand: string) => {
+    setCommand(generatedCommand);
+  };
+
+  const handleAIExecuteCommand = (generatedCommand: string) => {
+    setCommand(generatedCommand);
+    setShowAIAssistant(false);
+    // Executar após pequeno delay para mostrar o comando
+    setTimeout(() => {
+      executeCommand();
+    }, 100);
+  };
+
   return (
     <Paper
       sx={{
@@ -179,12 +203,35 @@ export default function ShellConsole({ dbName, embedded = false }: ShellConsoleP
             {dbName ? `Conectado ao database: ${dbName} | ` : ""}Enter ou Ctrl+Enter para executar | ↑↓ para navegar no histórico
           </Typography>
         </Box>
-        <Tooltip title="Limpar histórico">
-          <IconButton size="small" onClick={clearHistory}>
-            <ClearIcon />
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Tooltip title={showAIAssistant ? "Fechar Assistente IA" : "Abrir Assistente IA (Ctrl+Space)"}>
+            <IconButton 
+              size="small" 
+              onClick={() => setShowAIAssistant(!showAIAssistant)}
+              color={showAIAssistant ? "primary" : "default"}
+            >
+              <AutoAwesomeIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Limpar histórico">
+            <IconButton size="small" onClick={clearHistory}>
+              <ClearIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
+
+      {/* AI Assistant */}
+      {showAIAssistant && dbName && (
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+          <AIAssistant
+            dbName={dbName}
+            collectionName={collectionName}
+            onCommandGenerated={handleAICommandGenerated}
+            onExecuteCommand={handleAIExecuteCommand}
+          />
+        </Box>
+      )}
 
       {/* Output Area */}
       <Box
