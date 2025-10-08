@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InfoIcon from "@mui/icons-material/Info";
+import { sanitizeMongoJSON } from "@/lib/jsonParser";
 
 interface DocumentModalProps {
   open: boolean;
@@ -79,7 +80,9 @@ export default function DocumentModal({
 
   const handleSave = () => {
     try {
-      const parsed = JSON.parse(jsonText);
+      // Sanitizar JSON (permitir chaves sem aspas)
+      const sanitizedJSON = sanitizeMongoJSON(jsonText);
+      const parsed = JSON.parse(sanitizedJSON);
       
       // Validar que é um objeto ou array de objetos
       if (mode === "create") {
@@ -129,6 +132,9 @@ export default function DocumentModal({
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
               📅 Para datas use: {`{"$date": "2024-01-15T10:30:00.000Z"}`}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }}>
+              ✨ Aspas nas chaves são opcionais: {`{name: "João"}`} funciona!
             </Typography>
           </Box>
         )}
@@ -227,7 +233,7 @@ export default function DocumentModal({
             onChange={(e) => setJsonText(e.target.value)}
             variant="outlined"
             error={!!error}
-            placeholder={mode === "create" ? '{"nome": "Teste"} ou [{"nome": "Doc1"}, {"nome": "Doc2"}]' : '{"campo": "valor"}'}
+            placeholder={mode === "create" ? '{nome: "Teste"} ou [{nome: "Doc1"}, {nome: "Doc2"}]' : '{campo: "valor"}'}
             sx={{
               fontFamily: "monospace",
               "& textarea": {
