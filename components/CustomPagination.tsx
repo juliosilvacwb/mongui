@@ -22,7 +22,7 @@ export default function CustomPagination({
   pageSize,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [25, 50, 100, 1000, 10000, 100000],
+  pageSizeOptions = [10, 25, 50, 100, 1000, 10000, 100000],
 }: CustomPaginationProps) {
   const { t } = useTranslation();
   
@@ -52,7 +52,8 @@ export default function CustomPagination({
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        p: 2,
+        py: 0.75,
+        px: 2,
         borderTop: 1,
         borderColor: "divider",
         bgcolor: (theme) => theme.palette.mode === "dark" ? "#1e1e1e" : "#fafafa",
