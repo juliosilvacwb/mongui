@@ -83,6 +83,8 @@ export const en = {
     typesWarning: "Data Types:",
     typesExample: '❌ { "id": 123 } → number | ✅ { "id": "123" } → string',
     viewGuide: "View operators guide and examples",
+    invalidFilterJson: "Invalid Filter JSON",
+    invalidSortJson: "Invalid Sort JSON",
   },
 
   // Query Help Modal

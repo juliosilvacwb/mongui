@@ -54,6 +54,23 @@ export default function QueryPanel({
   };
 
   const handleQuery = async () => {
+    // Validar JSON do filtro
+    try {
+      JSON.parse(filter);
+    } catch (err: any) {
+      setError(`${t.queryPanel.invalidFilterJson}: ${err.message}`);
+      return;
+    }
+
+    // Validar JSON da ordenação
+    try {
+      JSON.parse(sort);
+    } catch (err: any) {
+      setError(`${t.queryPanel.invalidSortJson}: ${err.message}`);
+      return;
+    }
+
+    // Se chegou aqui, ambos são válidos
     try {
       const parsedFilter = JSON.parse(filter);
       const parsedSort = JSON.parse(sort);
@@ -66,7 +83,7 @@ export default function QueryPanel({
           collection: collectionName,
           filter: parsedFilter,
           sort: parsedSort,
-          limit: pageSize, // Usar o pageSize da paginação
+          limit: pageSize,
         }),
       });
 
@@ -82,7 +99,7 @@ export default function QueryPanel({
       }
     } catch (err: any) {
       console.error(t.messages.errorExecutingQuery, err);
-      setError(t.messages.errorExecutingQuery + " " + err.message);
+      setError(`${t.messages.errorExecutingQuery}: ${err.message}`);
     }
   };
 

@@ -85,6 +85,8 @@ export const pt: Translation = {
     typesWarning: "Tipos de Dados:",
     typesExample: '❌ { "id": 123 } → número | ✅ { "id": "123" } → string',
     viewGuide: "Ver guia de operadores e exemplos",
+    invalidFilterJson: "JSON do Filtro Inválido",
+    invalidSortJson: "JSON da Ordenação Inválido",
   },
 
   // Query Help Modal
