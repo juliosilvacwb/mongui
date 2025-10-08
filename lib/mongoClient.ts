@@ -1,10 +1,7 @@
 import { MongoClient, Db } from "mongodb";
 
-if (!process.env.MONGODB_URI) {
-  throw new Error("Por favor, adicione MONGODB_URI ao arquivo .env.local");
-}
-
-const uri: string = process.env.MONGODB_URI;
+// Fornece um valor padrão vazio durante build time para evitar erros
+const uri: string = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 const options = {};
 
 let client: MongoClient;

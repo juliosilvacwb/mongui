@@ -77,8 +77,8 @@ export function isProduction(): boolean {
   return process.env.NODE_ENV === "production";
 }
 
-// Validar na importação (apenas no servidor)
-if (typeof window === "undefined") {
+// Validar na importação (apenas no servidor e não durante o build)
+if (typeof window === "undefined" && process.env.NEXT_PHASE !== 'phase-production-build') {
   try {
     validateEnv();
   } catch (error) {
