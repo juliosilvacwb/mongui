@@ -6,9 +6,10 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { getAIProvider, getAIApiKey } from "./env";
-import { getAIConfig, MONGODB_DBA_SYSTEM_PROMPT } from "./aiConfig";
+import { getAIConfig } from "./aiConfig";
 import { logger } from "./logger";
-import { buildFullContext } from "./contextBuilder";
+import { buildFullContextWithAnalysis, suggestOperationType } from "./contextBuilder";
+import { MONGODB_DBA_SYSTEM_PROMPT, buildEnhancedPrompt } from "./prompts/mongodbExpert";
 
 /**
  * Criar instância do modelo de chat LangChain
@@ -82,28 +83,31 @@ export async function generateMongoCommand(
   }
 
   try {
-    // Construir contexto detalhado usando context builder
-    const contextMessage = buildFullContext(context);
-    
-    // Construir prompt do usuário
-    const userMessage = `
-SOLICITAÇÃO DO USUÁRIO:
-${userPrompt}
+    // Detectar tipo de operação baseado no prompt
+    const operationType = suggestOperationType(userPrompt);
+    logger.info(`Tipo de operação detectada: ${operationType}`);
 
-Por favor, gere um comando MongoDB adequado para essa solicitação, considerando o contexto fornecido.
-Responda APENAS com um objeto JSON válido no formato especificado no system prompt.
-`;
+    // Construir contexto detalhado COM ANÁLISE do prompt do usuário
+    const contextMessage = buildFullContextWithAnalysis(context, userPrompt);
+    
+    // Construir prompt aprimorado com template específico
+    const enhancedPrompt = buildEnhancedPrompt(userPrompt, operationType, contextMessage);
 
     logger.info(`Gerando comando para prompt: "${userPrompt}" em ${context.database}.${context.collection}`);
 
-    // Invocar modelo
+    // Invocar modelo com prompt aprimorado
     const messages = [
-      new SystemMessage(MONGODB_DBA_SYSTEM_PROMPT + "\n\n" + contextMessage),
-      new HumanMessage(userMessage)
+      new SystemMessage(MONGODB_DBA_SYSTEM_PROMPT),
+      new HumanMessage(enhancedPrompt)
     ];
 
+    const startTime = Date.now();
     const response = await chatModel.invoke(messages);
+    const executionTime = Date.now() - startTime;
+    
     const content = response.content.toString();
+    
+    logger.info(`IA respondeu em ${executionTime}ms`);
 
     // Parse da resposta
     const suggestion = parseAIResponse(content);
@@ -113,6 +117,20 @@ Responda APENAS com um objeto JSON válido no formato especificado no system pro
     return suggestion;
   } catch (error: any) {
     logger.error("Erro ao gerar comando:", error);
+    
+    // Melhorar mensagem de erro
+    if (error.message?.includes("JSON")) {
+      throw new Error("IA retornou resposta em formato inválido. Tente novamente.");
+    }
+    
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      throw new Error("Timeout ao gerar comando. Tente um prompt mais simples.");
+    }
+    
+    if (error.status === 429 || error.message?.includes('rate limit')) {
+      throw new Error("Limite de requisições atingido. Aguarde alguns instantes.");
+    }
+    
     throw new Error(`Erro ao gerar comando: ${error.message}`);
   }
 }

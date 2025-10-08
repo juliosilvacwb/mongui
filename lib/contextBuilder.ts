@@ -4,6 +4,7 @@
  */
 
 import { SuggestionContext } from "./aiClient";
+import { analyzePrompt, selectScenarioPrompt } from "./prompts/promptRefiner";
 
 /**
  * Construir descrição detalhada do schema em linguagem natural
@@ -138,7 +139,55 @@ export function describeAvailableCollections(collections: string[]): string {
 }
 
 /**
- * Construir contexto completo estruturado para a IA
+ * Construir contexto completo estruturado para a IA com análise de prompt
+ */
+export function buildFullContextWithAnalysis(
+  context: SuggestionContext,
+  userPrompt: string
+): string {
+  // Extrair campos disponíveis
+  const availableFields: string[] = [];
+  
+  if (context.schema?.$jsonSchema?.properties) {
+    availableFields.push(...Object.keys(context.schema.$jsonSchema.properties));
+  } else if (context.sampleDocuments && context.sampleDocuments.length > 0) {
+    const firstDoc = context.sampleDocuments[0];
+    availableFields.push(...Object.keys(firstDoc).filter(k => k !== '_id'));
+  }
+  
+  // Analisar prompt do usuário
+  const promptAnalysis = analyzePrompt(userPrompt, availableFields);
+  
+  // Selecionar dicas de cenário
+  const scenarioPrompts = selectScenarioPrompt(
+    promptAnalysis.operationType,
+    promptAnalysis.hasTimeReference,
+    promptAnalysis.hasComparison,
+    promptAnalysis.hasAggregation,
+    promptAnalysis.hasJoin
+  );
+  
+  // Construir contexto base
+  let fullContext = buildFullContext(context);
+  
+  // Adicionar análise do prompt
+  if (promptAnalysis.mentionedFields.length > 0) {
+    fullContext += "\n───────────────────────────────────────────────────────\n";
+    fullContext += `CAMPOS MENCIONADOS NO PROMPT: ${promptAnalysis.mentionedFields.join(", ")}\n`;
+  }
+  
+  // Adicionar dicas de cenário
+  if (scenarioPrompts) {
+    fullContext += "\n───────────────────────────────────────────────────────\n";
+    fullContext += "DICAS PARA ESTE CENÁRIO:\n";
+    fullContext += scenarioPrompts;
+  }
+  
+  return fullContext;
+}
+
+/**
+ * Construir contexto completo estruturado para a IA (versão simples)
  */
 export function buildFullContext(context: SuggestionContext): string {
   let fullContext = `

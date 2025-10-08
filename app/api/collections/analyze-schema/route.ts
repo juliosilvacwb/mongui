@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongoClient";
 import { logger } from "@/lib/logger";
+import { schemaCache, generateCacheKey } from "@/lib/aiCache";
 
 /**
  * GET - Análise completa do schema de uma coleção
@@ -18,6 +19,17 @@ export async function GET(request: Request) {
         { success: false, error: "Database e collection são obrigatórios" },
         { status: 400 }
       );
+    }
+
+    // Verificar cache
+    const cacheKey = generateCacheKey("schema-analysis", dbName, collectionName);
+    const cached = schemaCache.get(cacheKey);
+    if (cached) {
+      logger.info(`Schema de ${dbName}.${collectionName} retornado do cache`);
+      return NextResponse.json({
+        success: true,
+        data: { ...cached, fromCache: true }
+      });
     }
 
     const client = await clientPromise;
@@ -81,23 +93,28 @@ export async function GET(request: Request) {
 
     logger.info(`Schema analisado para ${dbName}.${collectionName}: ${documents.length} documentos, ${Object.keys(fieldAnalysis).length} campos`);
 
+    const result = {
+      database: dbName,
+      collection: collectionName,
+      validationSchema: validationSchema,
+      indexes: indexes,
+      fieldAnalysis: fieldAnalysis,
+      sampleDocuments: sampleDocuments,
+      availableCollections: availableCollections,
+      stats: {
+        totalDocuments: documentCount,
+        analyzedDocuments: documents.length,
+        fieldsFound: Object.keys(fieldAnalysis).length,
+        indexesCount: indexes.length,
+      }
+    };
+
+    // Salvar no cache
+    schemaCache.set(cacheKey, result);
+
     return NextResponse.json({
       success: true,
-      data: {
-        database: dbName,
-        collection: collectionName,
-        validationSchema: validationSchema,
-        indexes: indexes,
-        fieldAnalysis: fieldAnalysis,
-        sampleDocuments: sampleDocuments,
-        availableCollections: availableCollections,
-        stats: {
-          totalDocuments: documentCount,
-          analyzedDocuments: documents.length,
-          fieldsFound: Object.keys(fieldAnalysis).length,
-          indexesCount: indexes.length,
-        }
-      }
+      data: result
     });
   } catch (error: any) {
     logger.error("Erro ao analisar schema:", error);

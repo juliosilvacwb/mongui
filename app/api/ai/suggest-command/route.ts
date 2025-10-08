@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isAIEnabled } from "@/lib/env";
 import { generateMongoCommand, validateMongoCommand } from "@/lib/aiClient";
 import { logger } from "@/lib/logger";
+import { commandCache, generateCacheKey, simpleHash } from "@/lib/aiCache";
 
 /**
  * POST - Gerar sugestão de comando MongoDB usando IA
@@ -41,6 +42,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Verificar cache (comandos similares podem ser reutilizados)
+    const promptHash = simpleHash(prompt.toLowerCase().trim());
+    const cacheKey = generateCacheKey("command", database, collection, promptHash);
+    const cached = commandCache.get(cacheKey);
+    
+    if (cached) {
+      logger.info(`Comando retornado do cache para: "${prompt}"`);
+      return NextResponse.json({
+        success: true,
+        data: { ...cached, fromCache: true }
+      });
+    }
+
     logger.info(`Gerando comando para: "${prompt}" em ${database}.${collection}`);
 
     // Gerar comando usando IA
@@ -71,6 +85,9 @@ export async function POST(request: Request) {
     }
 
     logger.info(`Comando gerado com sucesso: ${suggestion.command}`);
+
+    // Salvar no cache
+    commandCache.set(cacheKey, suggestion);
 
     return NextResponse.json({
       success: true,
