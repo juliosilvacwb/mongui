@@ -99,6 +99,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
             .map((key) => ({
               field: key,
               headerName: key,
+              headerTooltip: key, // Tooltip mostra o nome completo da coluna
               sortable: false,
               filter: false,
               resizable: true,
@@ -214,6 +215,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
         .map((key) => ({
           field: key,
           headerName: key,
+          headerTooltip: key, // Tooltip mostra o nome completo da coluna
           sortable: false,
           filter: false,
           resizable: true,
@@ -513,6 +515,7 @@ export default function DocumentGrid({ dbName, collectionName }: DocumentGridPro
               loading={loading}
               rowModelType="clientSide"
               suppressScrollOnNewData={true}
+              enableBrowserTooltips={true}
               onColumnHeaderClicked={(params: any) => {
                 const colId = params.column?.getColId ? params.column.getColId() : null;
                 if (colId && colId !== "actions") {
