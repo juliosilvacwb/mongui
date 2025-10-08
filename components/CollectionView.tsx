@@ -13,8 +13,10 @@ import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import StorageIcon from "@mui/icons-material/Storage";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import TerminalIcon from "@mui/icons-material/Terminal";
 import DocumentGrid from "./DocumentGrid";
 import ConfirmDialog from "./ConfirmDialog";
+import ShellConsole from "./ShellConsole";
 
 interface CollectionViewProps {
   dbName: string;
@@ -387,6 +389,13 @@ export default function CollectionView({
             label="Indexes"
             id="collection-tab-2"
             aria-controls="collection-tabpanel-2"
+          />
+          <Tab
+            icon={<TerminalIcon sx={{ fontSize: 20 }} />}
+            iconPosition="start"
+            label="Shell"
+            id="collection-tab-3"
+            aria-controls="collection-tabpanel-3"
           />
         </Tabs>
       </Box>
@@ -761,6 +770,12 @@ export default function CollectionView({
             </TableContainer>
           )}
         </Paper>
+      </TabPanel>
+
+      <TabPanel value={currentTab} index={3}>
+        <Box sx={{ mt: 2 }}>
+          <ShellConsole dbName={dbName} embedded={true} />
+        </Box>
       </TabPanel>
 
       {/* Dialog para criar índice */}

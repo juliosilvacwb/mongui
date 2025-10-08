@@ -24,9 +24,10 @@ interface ShellOutput {
 
 interface ShellConsoleProps {
   dbName?: string;
+  embedded?: boolean; // Se true, ajusta altura para modo embedded (dentro de aba)
 }
 
-export default function ShellConsole({ dbName }: ShellConsoleProps = {}) {
+export default function ShellConsole({ dbName, embedded = false }: ShellConsoleProps = {}) {
   const [command, setCommand] = useState("");
   const [history, setHistory] = useState<ShellOutput[]>([]);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
@@ -153,7 +154,7 @@ export default function ShellConsole({ dbName }: ShellConsoleProps = {}) {
   return (
     <Paper
       sx={{
-        height: "calc(100vh - 150px)",
+        height: embedded ? "calc(100vh - 280px)" : "calc(100vh - 150px)",
         display: "flex",
         flexDirection: "column",
         bgcolor: "background.paper",
@@ -262,19 +263,19 @@ export default function ShellConsole({ dbName }: ShellConsoleProps = {}) {
             <Typography variant="body2" component="div" sx={{ ml: 2, color: (theme) => theme.palette.mode === "dark" ? "#4EC9B0" : "#0000FF" }}>
               {dbName ? (
                 <>
-                  db.coletas.find({`{ id_usuario: "12345" }`})
+                  db.users.find({`{ id_usuario: "12345" }`})
                   <br />
-                  db.coletas.find().sort({`{ data_coleta: -1 }`}).limit(10)
+                  db.users.find().sort({`{ data: -1 }`}).limit(10)
                   <br />
-                  db.coletas.aggregate([{`{ $group: { _id: "$status", total: { $sum: 1 } } }`}])
+                  db.users.aggregate([{`{ $group: { _id: "$status", total: { $sum: 1 } } }`}])
                 </>
               ) : (
                 <>
-                  db.ccee.coletas.find({`{ id_coleta: "12345" }`})
+                  db.ccee.users.find({`{ id_coleta: "12345" }`})
                   <br />
-                  db.ccee.coletas.find().sort({`{ data_coleta: -1 }`}).limit(10)
+                  db.ccee.users.find().sort({`{ data: -1 }`}).limit(10)
                   <br />
-                  db.ccee.coletas.aggregate([{`{ $group: { _id: "$status", total: { $sum: 1 } } }`}])
+                  db.ccee.users.aggregate([{`{ $group: { _id: "$status", total: { $sum: 1 } } }`}])
                 </>
               )}
             </Typography>

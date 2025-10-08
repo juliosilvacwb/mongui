@@ -262,26 +262,6 @@ export default function SideDrawer() {
               </ListItemIcon>
               <ListItemText primary={db.name} />
               
-              <Tooltip title={t.sidebar.openShell}>
-                <IconButton
-                  className="db-actions"
-                  component={Link}
-                  href={`/shell/${db.name}`}
-                  size="small"
-                  onClick={(e) => e.stopPropagation()}
-                  sx={{
-                    opacity: 0,
-                    transition: "opacity 0.2s",
-                    mr: 0.5,
-                    "&:hover": {
-                      color: "primary.main",
-                    },
-                  }}
-                >
-                  <TerminalIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              
               <Tooltip title={t.sidebar.deleteDatabase}>
                 <IconButton
                   className="db-actions"
