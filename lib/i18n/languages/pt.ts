@@ -28,6 +28,7 @@ export const pt: Translation = {
     newCollection: "Nova Collection",
     deleteDatabase: "Deletar database",
     deleteCollection: "Deletar collection",
+    openShell: "Abrir Shell para este database",
     noCollections: "Sem collections",
     noDatabases: "Nenhum database encontrado",
     loading: "Carregando databases...",

@@ -7,7 +7,7 @@ import { logger } from "@/lib/logger";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { command } = body;
+    const { command, db } = body;
 
     if (!command) {
       return NextResponse.json(
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const startTime = Date.now();
-    const result = await executeCommand(command);
+    const result = await executeCommand(command, db);
     const executionTime = Date.now() - startTime;
 
     return NextResponse.json({
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   }
 }
 
-async function executeCommand(command: string): Promise<any> {
+async function executeCommand(command: string, contextDb?: string): Promise<any> {
   const client = await clientPromise;
   const trimmedCommand = command.trim();
 
@@ -78,7 +78,14 @@ async function executeCommand(command: string): Promise<any> {
     }
   }
 
-  // db.getCollectionNames() ou db.<database>.getCollectionNames()
+  // db.getCollectionNames() quando contextDb está definido
+  if (contextDb && trimmedCommand === "db.getCollectionNames()") {
+    const db = client.db(contextDb);
+    const collections = await db.listCollections().toArray();
+    return collections.map((col: any) => col.name);
+  }
+
+  // db.<database>.getCollectionNames()
   const getCollectionsRegex = /^db\.([a-zA-Z0-9_-]+)\.getCollectionNames\(\)$/;
   const collectionsMatch = trimmedCommand.match(getCollectionsRegex);
   if (collectionsMatch) {
@@ -88,7 +95,18 @@ async function executeCommand(command: string): Promise<any> {
     return collections.map((col: any) => col.name);
   }
 
-  // db.<database>.<collection>.<operation>(...)
+  // Se contextDb está definido, aceita: db.<collection>.<operation>(...)
+  if (contextDb) {
+    const contextPattern = /^db\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_]+)\((.*)\)$/s;
+    const contextMatch = trimmedCommand.match(contextPattern);
+    if (contextMatch) {
+      const [, collectionName, operation, argsStr] = contextMatch;
+      const db = client.db(contextDb);
+      return await executeOperation(db, collectionName, operation, argsStr.trim());
+    }
+  }
+
+  // Formato padrão: db.<database>.<collection>.<operation>(...)
   const dbCollectionRegex = /^db\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_]+)\((.*)\)$/s;
   const match = trimmedCommand.match(dbCollectionRegex);
 
@@ -99,18 +117,27 @@ async function executeCommand(command: string): Promise<any> {
     return await executeOperation(db, collectionName, operation, argsStr.trim());
   }
 
-  throw new Error(
-    "Comando não reconhecido.\n\n" +
-    "Comandos suportados:\n" +
-    "  • show dbs\n" +
-    "  • db.<database>.getCollectionNames()\n" +
-    "  • db.<database>.<collection>.find({})\n" +
-    "  • db.<database>.<collection>.findOne({})\n" +
-    "  • db.<database>.<collection>.insertOne({...})\n" +
-    "  • db.<database>.<collection>.updateOne({}, {...})\n" +
-    "  • db.<database>.<collection>.deleteOne({})\n" +
-    "  • db.<database>.<collection>.countDocuments({})"
-  );
+  const commandsHelp = contextDb 
+    ? "Comandos suportados (database: " + contextDb + "):\n" +
+      "  • show dbs\n" +
+      "  • db.getCollectionNames()\n" +
+      "  • db.<collection>.find({})\n" +
+      "  • db.<collection>.findOne({})\n" +
+      "  • db.<collection>.insertOne({...})\n" +
+      "  • db.<collection>.updateOne({}, {...})\n" +
+      "  • db.<collection>.deleteOne({})\n" +
+      "  • db.<collection>.countDocuments({})"
+    : "Comandos suportados:\n" +
+      "  • show dbs\n" +
+      "  • db.<database>.getCollectionNames()\n" +
+      "  • db.<database>.<collection>.find({})\n" +
+      "  • db.<database>.<collection>.findOne({})\n" +
+      "  • db.<database>.<collection>.insertOne({...})\n" +
+      "  • db.<database>.<collection>.updateOne({}, {...})\n" +
+      "  • db.<database>.<collection>.deleteOne({})\n" +
+      "  • db.<database>.<collection>.countDocuments({})";
+
+  throw new Error("Comando não reconhecido.\n\n" + commandsHelp);
 }
 
 async function executeOperation(

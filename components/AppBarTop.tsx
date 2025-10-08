@@ -91,20 +91,6 @@ export default function AppBarTop({
             </Tooltip>
           )}
 
-          <Tooltip title={isShellPage ? t.appBar.alreadyInShell : t.appBar.shell}>
-            <span>
-              <Link 
-                href="/shell" 
-                passHref 
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <IconButton color="inherit" disabled={isShellPage}>
-                  <TerminalIcon />
-                </IconButton>
-              </Link>
-            </span>
-          </Tooltip>
-
           <Tooltip title={t.appBar.language}>
             <IconButton color="inherit" onClick={handleLangMenuOpen}>
               <LanguageIcon />

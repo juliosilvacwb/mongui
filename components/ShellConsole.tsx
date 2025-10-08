@@ -22,7 +22,11 @@ interface ShellOutput {
   timestamp: Date;
 }
 
-export default function ShellConsole() {
+interface ShellConsoleProps {
+  dbName?: string;
+}
+
+export default function ShellConsole({ dbName }: ShellConsoleProps = {}) {
   const [command, setCommand] = useState("");
   const [history, setHistory] = useState<ShellOutput[]>([]);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
@@ -50,7 +54,10 @@ export default function ShellConsole() {
       const response = await fetch("/api/shell", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ command }),
+        body: JSON.stringify({ 
+          command,
+          db: dbName, // Passa o database específico se fornecido
+        }),
       });
 
       const result = await response.json();
@@ -164,9 +171,11 @@ export default function ShellConsole() {
         }}
       >
         <Box>
-          <Typography variant="h6">💻 MongoDB Shell</Typography>
+          <Typography variant="h6">
+            💻 MongoDB Shell{dbName && ` - ${dbName}`}
+          </Typography>
           <Typography variant="caption" color="text.secondary">
-            Enter ou Ctrl+Enter para executar | ↑↓ para navegar no histórico
+            {dbName ? `Conectado ao database: ${dbName} | ` : ""}Enter ou Ctrl+Enter para executar | ↑↓ para navegar no histórico
           </Typography>
         </Box>
         <Tooltip title="Limpar histórico">
@@ -194,31 +203,59 @@ export default function ShellConsole() {
             <Typography variant="body2" sx={{ mb: 1 }}>
               # 🍃 MongoDB Shell Interativo
             </Typography>
+            {dbName && (
+              <Typography variant="body2" sx={{ mb: 1, color: "primary.main", fontWeight: "bold" }}>
+                # Conectado ao database: {dbName}
+              </Typography>
+            )}
             <Typography variant="body2" sx={{ mb: 1 }}>
               # Comandos disponíveis:
             </Typography>
             <Typography variant="body2" component="div" sx={{ ml: 2 }}>
               • show dbs
               <br />
-              • db.&lt;database&gt;.getCollectionNames()
-              <br />
-              • db.&lt;database&gt;.&lt;collection&gt;.find({`{}`})
-              <br />
-              • db.&lt;database&gt;.&lt;collection&gt;.findOne({`{}`})
-              <br />
-              • db.&lt;database&gt;.&lt;collection&gt;.insertOne({`{name: "Test"}`})
-              <br />
-              • db.&lt;database&gt;.&lt;collection&gt;.updateOne([{`{}`}, {`{$set: {...}}`}])
-              <br />
-              • db.&lt;database&gt;.&lt;collection&gt;.deleteOne({`{}`})
-              <br />
-              • db.&lt;database&gt;.&lt;collection&gt;.countDocuments({`{}`})
+              {dbName ? (
+                <>
+                  • db.getCollectionNames()
+                  <br />
+                  • db.&lt;collection&gt;.find({`{}`})
+                  <br />
+                  • db.&lt;collection&gt;.findOne({`{}`})
+                  <br />
+                  • db.&lt;collection&gt;.insertOne({`{name: "Test"}`})
+                  <br />
+                  • db.&lt;collection&gt;.updateOne({`{}`}, {`{$set: {...}}`})
+                  <br />
+                  • db.&lt;collection&gt;.deleteOne({`{}`})
+                  <br />
+                  • db.&lt;collection&gt;.countDocuments({`{}`})
+                </>
+              ) : (
+                <>
+                  • db.&lt;database&gt;.getCollectionNames()
+                  <br />
+                  • db.&lt;database&gt;.&lt;collection&gt;.find({`{}`})
+                  <br />
+                  • db.&lt;database&gt;.&lt;collection&gt;.findOne({`{}`})
+                  <br />
+                  • db.&lt;database&gt;.&lt;collection&gt;.insertOne({`{name: "Test"}`})
+                  <br />
+                  • db.&lt;database&gt;.&lt;collection&gt;.updateOne({`{}`}, {`{$set: {...}}`})
+                  <br />
+                  • db.&lt;database&gt;.&lt;collection&gt;.deleteOne({`{}`})
+                  <br />
+                  • db.&lt;database&gt;.&lt;collection&gt;.countDocuments({`{}`})
+                </>
+              )}
             </Typography>
             <Typography variant="body2" sx={{ mt: 2 }}>
               # Exemplo:
             </Typography>
             <Typography variant="body2" sx={{ ml: 2, color: (theme) => theme.palette.mode === "dark" ? "#4EC9B0" : "#0000FF" }}>
-              db.ccee.coletas.find({`{"id_coleta": "12345"}`})
+              {dbName 
+                ? `db.coletas.find({"id_coleta": "12345"})` 
+                : `db.ccee.coletas.find({"id_coleta": "12345"})`
+              }
             </Typography>
           </Box>
         )}
@@ -235,7 +272,7 @@ export default function ShellConsole() {
                   wordBreak: "break-all"
                 }}
               >
-                &gt; {entry.command}
+                {dbName ? `${dbName}>` : ">"} {entry.command}
               </Typography>
               <Tooltip title="Copiar comando">
                 <IconButton
@@ -323,13 +360,28 @@ export default function ShellConsole() {
       <Divider />
 
       {/* Input Area */}
-      <Box sx={{ p: 2, display: "flex", gap: 1, bgcolor: "background.paper" }}>
+      <Box sx={{ p: 2, display: "flex", gap: 1, bgcolor: "background.paper", alignItems: "flex-start" }}>
+        <Box sx={{ display: "flex", alignItems: "center", pt: 1, flexShrink: 0 }}>
+          <Typography
+            sx={{
+              fontFamily: "Roboto Mono, Consolas, Monaco, monospace",
+              fontWeight: "bold",
+              color: "primary.main",
+              fontSize: "0.875rem",
+            }}
+          >
+            {dbName ? `${dbName}>` : ">"}
+          </Typography>
+        </Box>
         <TextField
           fullWidth
           value={command}
           onChange={(e) => setCommand(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Digite comando MongoDB (Enter para executar)"
+          placeholder={dbName 
+            ? `db.getCollectionNames() ou db.<collection>.find({})` 
+            : "Digite comando MongoDB (Enter para executar)"
+          }
           size="small"
           disabled={loading}
           multiline

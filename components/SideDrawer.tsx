@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import Drawer from "@mui/material/Drawer";
 import Toolbar from "@mui/material/Toolbar";
 import Box from "@mui/material/Box";
@@ -19,6 +20,7 @@ import Typography from "@mui/material/Typography";
 import { Button, Divider, Snackbar, Alert, IconButton, Tooltip } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import TerminalIcon from "@mui/icons-material/Terminal";
 import CreateDatabaseModal from "./CreateDatabaseModal";
 import CreateCollectionModal from "./CreateCollectionModal";
 import DeleteDatabaseModal from "./DeleteDatabaseModal";
@@ -246,38 +248,59 @@ export default function SideDrawer() {
         <List>
           {databases.map((db) => (
             <div key={db.name}>
-              {/* Database Item */}
-              <ListItemButton 
-                onClick={() => handleDatabaseClick(db.name)}
-                sx={{
-                  "&:hover .delete-db-btn": {
-                    opacity: 1,
-                  },
-                }}
-              >
-                <ListItemIcon>
-                  <StorageIcon />
-                </ListItemIcon>
-                <ListItemText primary={db.name} />
-                <Tooltip title={t.sidebar.deleteDatabase}>
-                  <IconButton
-                    className="delete-db-btn"
-                    size="small"
-                    onClick={(e) => handleDeleteDatabase(db.name, e)}
-                    sx={{
-                      opacity: 0,
-                      transition: "opacity 0.2s",
-                      mr: 0.5,
-                      "&:hover": {
-                        color: "error.main",
-                      },
-                    }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                {db.expanded ? <ExpandLess /> : <ExpandMore />}
-              </ListItemButton>
+            {/* Database Item */}
+            <ListItemButton
+              onClick={() => handleDatabaseClick(db.name)}
+              sx={{
+                "&:hover .db-actions": {
+                  opacity: 1,
+                },
+              }}
+            >
+              <ListItemIcon>
+                <StorageIcon />
+              </ListItemIcon>
+              <ListItemText primary={db.name} />
+              
+              <Tooltip title={t.sidebar.openShell}>
+                <IconButton
+                  className="db-actions"
+                  component={Link}
+                  href={`/shell/${db.name}`}
+                  size="small"
+                  onClick={(e) => e.stopPropagation()}
+                  sx={{
+                    opacity: 0,
+                    transition: "opacity 0.2s",
+                    mr: 0.5,
+                    "&:hover": {
+                      color: "primary.main",
+                    },
+                  }}
+                >
+                  <TerminalIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              
+              <Tooltip title={t.sidebar.deleteDatabase}>
+                <IconButton
+                  className="db-actions"
+                  size="small"
+                  onClick={(e) => handleDeleteDatabase(db.name, e)}
+                  sx={{
+                    opacity: 0,
+                    transition: "opacity 0.2s",
+                    mr: 0.5,
+                    "&:hover": {
+                      color: "error.main",
+                    },
+                  }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              {db.expanded ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
 
               {/* Collections List */}
               <Collapse in={db.expanded} timeout="auto" unmountOnExit>

@@ -26,6 +26,7 @@ export const en = {
     newCollection: "New Collection",
     deleteDatabase: "Delete database",
     deleteCollection: "Delete collection",
+    openShell: "Open Shell for this database",
     noCollections: "No collections",
     noDatabases: "No databases found",
     loading: "Loading databases...",
