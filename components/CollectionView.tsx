@@ -1,10 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Box, Tabs, Tab, Paper, Typography, Alert, IconButton, Tooltip, Snackbar } from "@mui/material";
+import { Box, Tabs, Tab, Paper, Typography, Alert, IconButton, Tooltip, Snackbar, TextField, Button, CircularProgress } from "@mui/material";
 import DescriptionIcon from "@mui/icons-material/Description";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import EditIcon from "@mui/icons-material/Edit";
+import SaveIcon from "@mui/icons-material/Save";
+import CancelIcon from "@mui/icons-material/Cancel";
+import AddIcon from "@mui/icons-material/Add";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import DocumentGrid from "./DocumentGrid";
 
 interface CollectionViewProps {
@@ -43,6 +48,11 @@ export default function CollectionView({
   const [loadingSchema, setLoadingSchema] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedValidator, setEditedValidator] = useState("");
+  const [validationError, setValidationError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     fetchSchema();
@@ -84,6 +94,88 @@ export default function CollectionView({
           setSnackbarMessage("Erro ao copiar schema");
           setSnackbarOpen(true);
         });
+    }
+  };
+
+  const handleEditClick = () => {
+    if (schemaInfo && schemaInfo.validator) {
+      setEditedValidator(JSON.stringify(schemaInfo.validator, null, 2));
+      setIsEditing(true);
+      setValidationError("");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedValidator("");
+    setValidationError("");
+  };
+
+  const handleGenerateSchema = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch(
+        `/api/collections/analyze?db=${dbName}&collection=${collectionName}&sampleSize=100`
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        setEditedValidator(JSON.stringify(result.data.validator, null, 2));
+        setIsEditing(true);
+        setValidationError("");
+        setSnackbarMessage(`Schema gerado analisando ${result.data.stats.documentsAnalyzed} documentos`);
+        setSnackbarOpen(true);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      setSnackbarMessage("Erro ao gerar schema: " + error.message);
+      setSnackbarOpen(true);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSaveValidation = async () => {
+    // Validar JSON
+    try {
+      const parsedValidator = JSON.parse(editedValidator);
+      
+      setIsSaving(true);
+      setValidationError("");
+
+      const response = await fetch("/api/collections/validation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          db: dbName,
+          collection: collectionName,
+          validator: parsedValidator,
+          validationLevel: "strict",
+          validationAction: "error"
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSnackbarMessage("Validação salva com sucesso!");
+        setSnackbarOpen(true);
+        setIsEditing(false);
+        setEditedValidator("");
+        // Recarregar schema
+        await fetchSchema();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      if (error instanceof SyntaxError) {
+        setValidationError("JSON inválido: " + error.message);
+      } else {
+        setValidationError("Erro ao salvar: " + error.message);
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -188,39 +280,93 @@ export default function CollectionView({
                 <Typography variant="subtitle2" color="text.secondary">
                   Regras de Validação
                 </Typography>
-                <Tooltip title="Copiar schema">
-                  <IconButton size="small" onClick={copySchemaToClipboard}>
-                    <ContentCopyIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  {!isEditing ? (
+                    <>
+                      <Tooltip title="Copiar schema">
+                        <IconButton size="small" onClick={copySchemaToClipboard}>
+                          <ContentCopyIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Editar validação">
+                        <IconButton size="small" onClick={handleEditClick} color="primary">
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </>
+                  ) : (
+                    <>
+                      <Tooltip title="Cancelar">
+                        <IconButton size="small" onClick={handleCancelEdit}>
+                          <CancelIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Salvar validação">
+                        <IconButton 
+                          size="small" 
+                          onClick={handleSaveValidation}
+                          color="primary"
+                          disabled={isSaving}
+                        >
+                          {isSaving ? <CircularProgress size={20} /> : <SaveIcon fontSize="small" />}
+                        </IconButton>
+                      </Tooltip>
+                    </>
+                  )}
+                </Box>
               </Box>
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 0,
-                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50',
-                  overflow: "hidden",
-                  maxHeight: "500px",
-                }}
-              >
-                <Box
-                  component="pre"
+
+              {validationError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {validationError}
+                </Alert>
+              )}
+
+              {isEditing ? (
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={20}
+                  value={editedValidator}
+                  onChange={(e) => setEditedValidator(e.target.value)}
+                  variant="outlined"
+                  error={!!validationError}
                   sx={{
-                    margin: 0,
-                    fontFamily: "Roboto Mono, monospace",
-                    fontSize: "0.813rem",
-                    lineHeight: 1.6,
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                    color: (theme) => theme.palette.mode === 'dark' ? 'grey.100' : 'grey.900',
-                    p: 2,
-                    overflow: "auto",
+                    "& textarea": {
+                      fontFamily: "Roboto Mono, monospace",
+                      fontSize: "0.813rem",
+                    },
+                  }}
+                />
+              ) : (
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 0,
+                    bgcolor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50',
+                    overflow: "hidden",
                     maxHeight: "500px",
                   }}
                 >
-                  {JSON.stringify(schemaInfo.validator, null, 2)}
-                </Box>
-              </Paper>
+                  <Box
+                    component="pre"
+                    sx={{
+                      margin: 0,
+                      fontFamily: "Roboto Mono, monospace",
+                      fontSize: "0.813rem",
+                      lineHeight: 1.6,
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      color: (theme) => theme.palette.mode === 'dark' ? 'grey.100' : 'grey.900',
+                      p: 2,
+                      overflow: "auto",
+                      maxHeight: "500px",
+                    }}
+                  >
+                    {JSON.stringify(schemaInfo.validator, null, 2)}
+                  </Box>
+                </Paper>
+              )}
 
               {schemaInfo.validator.$jsonSchema && (
                 <Box sx={{ mt: 3 }}>
@@ -231,7 +377,7 @@ export default function CollectionView({
                 </Box>
               )}
             </Box>
-          ) : (
+          ) : !isEditing ? (
             <Box sx={{ textAlign: "center", py: 6 }}>
               <VerifiedUserIcon sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
               <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -240,9 +386,96 @@ export default function CollectionView({
               <Typography variant="body2" color="text.secondary">
                 Esta coleção não possui validação de schema ativa.
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Use o Shell para adicionar validação à coleção.
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 3 }}>
+                Crie uma validação personalizada ou gere automaticamente baseada nos documentos existentes.
               </Typography>
+
+              <Box sx={{ display: "flex", gap: 2, justifyContent: "center", flexWrap: "wrap" }}>
+                <Button
+                  variant="contained"
+                  startIcon={isGenerating ? <CircularProgress size={20} color="inherit" /> : <AutoFixHighIcon />}
+                  onClick={handleGenerateSchema}
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? "Gerando..." : "Gerar Automaticamente"}
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    setEditedValidator(JSON.stringify({
+                      $jsonSchema: {
+                        bsonType: "object",
+                        required: [],
+                        properties: {}
+                      }
+                    }, null, 2));
+                    setIsEditing(true);
+                  }}
+                >
+                  Criar Manualmente
+                </Button>
+              </Box>
+            </Box>
+          ) : (
+            <Box>
+              <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <VerifiedUserIcon color="primary" />
+                Criar Schema de Validação
+              </Typography>
+
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <Typography variant="body2">
+                  Defina as regras de validação no formato JSON Schema. 
+                  Os campos em "required" serão obrigatórios e "properties" define as restrições de cada campo.
+                </Typography>
+              </Alert>
+
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Regras de Validação
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <Tooltip title="Cancelar">
+                    <IconButton size="small" onClick={handleCancelEdit}>
+                      <CancelIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Salvar validação">
+                    <IconButton 
+                      size="small" 
+                      onClick={handleSaveValidation}
+                      color="primary"
+                      disabled={isSaving}
+                    >
+                      {isSaving ? <CircularProgress size={20} /> : <SaveIcon fontSize="small" />}
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+
+              {validationError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {validationError}
+                </Alert>
+              )}
+
+              <TextField
+                fullWidth
+                multiline
+                rows={20}
+                value={editedValidator}
+                onChange={(e) => setEditedValidator(e.target.value)}
+                variant="outlined"
+                error={!!validationError}
+                placeholder='{"$jsonSchema": {"bsonType": "object", "required": ["campo1"], "properties": {...}}}'
+                sx={{
+                  "& textarea": {
+                    fontFamily: "Roboto Mono, monospace",
+                    fontSize: "0.813rem",
+                  },
+                }}
+              />
             </Box>
           )}
         </Paper>
