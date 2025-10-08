@@ -96,26 +96,26 @@ async function executeCommand(command: string, contextDb?: string): Promise<any>
     return collections.map((col: any) => col.name);
   }
 
-  // Se contextDb está definido, aceita: db.<collection>.<operation>(...)
+  // Se contextDb está definido, aceita: db.<collection>.<operation>(...) com chaining
   if (contextDb) {
-    const contextPattern = /^db\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_]+)\((.*)\)$/s;
+    const contextPattern = /^db\.([a-zA-Z0-9_-]+)\.(.+)$/s;
     const contextMatch = trimmedCommand.match(contextPattern);
     if (contextMatch) {
-      const [, collectionName, operation, argsStr] = contextMatch;
+      const [, collectionName, operationsChain] = contextMatch;
       const db = client.db(contextDb);
-      return await executeOperation(db, collectionName, operation, argsStr.trim());
+      return await executeOperationChain(db, collectionName, operationsChain);
     }
   }
 
-  // Formato padrão: db.<database>.<collection>.<operation>(...)
-  const dbCollectionRegex = /^db\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_]+)\((.*)\)$/s;
+  // Formato padrão: db.<database>.<collection>.<operation>(...) com chaining
+  const dbCollectionRegex = /^db\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9_-]+)\.(.+)$/s;
   const match = trimmedCommand.match(dbCollectionRegex);
 
   if (match) {
-    const [, dbName, collectionName, operation, argsStr] = match;
+    const [, dbName, collectionName, operationsChain] = match;
     const db = client.db(dbName);
 
-    return await executeOperation(db, collectionName, operation, argsStr.trim());
+    return await executeOperationChain(db, collectionName, operationsChain);
   }
 
   const commandsHelp = contextDb 
@@ -141,36 +141,156 @@ async function executeCommand(command: string, contextDb?: string): Promise<any>
   throw new Error("Comando não reconhecido.\n\n" + commandsHelp);
 }
 
-async function executeOperation(
+/**
+ * Executa uma cadeia de operações encadeadas (ex: find().sort().limit())
+ */
+async function executeOperationChain(
   db: any,
   collectionName: string,
-  operation: string,
-  argsStr: string
+  operationsChain: string
 ): Promise<any> {
-  // Verificar read-only para operações de escrita
-  const writeOperations = ["insertOne", "insertMany", "updateOne", "updateMany", "deleteOne", "deleteMany"];
-  if (isReadOnly() && writeOperations.includes(operation)) {
-    throw new Error(
-      `Operação '${operation}' não permitida.\n\n` +
-      "Aplicação em modo somente leitura (READ_ONLY=true).\n" +
-      "Apenas operações de leitura são permitidas: find, findOne, countDocuments, distinct"
-    );
-  }
-
   const collection = db.collection(collectionName);
 
-  // Parse argumentos usando o novo parser que suporta JSON relaxed
-  let args: any[] = [];
-  if (argsStr) {
-    try {
-      args = parseMongoArgs(argsStr);
-      
-      // Converter ObjectId markers para ObjectId reais
-      args = args.map((arg) => convertObjectIds(arg));
-    } catch (error: any) {
-      throw new Error(`Erro ao parsear argumentos: ${error.message}\n\nArgumentos: ${argsStr}`);
+  // Parse a cadeia de operações
+  // Exemplo: find({ status: "ativo" }).sort({ idade: -1 }).limit(10)
+  const operations = parseOperationChain(operationsChain);
+
+  let cursor: any = null;
+  let result: any = null;
+
+  for (const op of operations) {
+    const { method, args } = op;
+
+    // Verificar read-only para operações de escrita
+    const writeOperations = ["insertOne", "insertMany", "updateOne", "updateMany", "deleteOne", "deleteMany"];
+    if (isReadOnly() && writeOperations.includes(method)) {
+      throw new Error(
+        `Operação '${method}' não permitida.\n\n` +
+        "Aplicação em modo somente leitura (READ_ONLY=true).\n" +
+        "Apenas operações de leitura são permitidas: find, findOne, countDocuments, distinct"
+      );
+    }
+
+    // Operações que iniciam cursor
+    if (method === "find") {
+      const findArg = args[0] || {};
+      cursor = collection.find(findArg);
+    }
+    // Operações que modificam cursor
+    else if (cursor && (method === "sort" || method === "limit" || method === "skip")) {
+      if (method === "sort") {
+        const sortArg = args[0] || {};
+        cursor = cursor.sort(sortArg);
+      } else if (method === "limit") {
+        const limitArg = args[0] || 50;
+        cursor = cursor.limit(typeof limitArg === "number" ? limitArg : parseInt(limitArg));
+      } else if (method === "skip") {
+        const skipArg = args[0] || 0;
+        cursor = cursor.skip(typeof skipArg === "number" ? skipArg : parseInt(skipArg));
+      }
+    }
+    // Operações diretas (não encadeáveis)
+    else {
+      return await executeSingleOperation(collection, method, args);
     }
   }
+
+  // Se temos um cursor, executar toArray()
+  if (cursor) {
+    const documents = await cursor.toArray();
+    return {
+      documents: documents.map(serializeDocument),
+      count: documents.length,
+    };
+  }
+
+  return result;
+}
+
+/**
+ * Parse cadeia de operações encadeadas
+ * Exemplo: "find({ status: 'ativo' }).sort({ idade: -1 }).limit(10)"
+ * Retorna: [{ method: "find", args: [...] }, { method: "sort", args: [...] }, ...]
+ */
+function parseOperationChain(chain: string): Array<{ method: string; args: any[] }> {
+  const operations: Array<{ method: string; args: any[] }> = [];
+  
+  // Regex para capturar método(argumentos)
+  const operationRegex = /([a-zA-Z0-9_]+)\(([^()]*|\{[^}]*\})*\)/g;
+  let match;
+
+  // Usar um approach mais robusto - encontrar cada método e seus argumentos
+  let remaining = chain;
+  
+  while (remaining.length > 0) {
+    // Encontrar próximo método
+    const methodMatch = remaining.match(/^([a-zA-Z0-9_]+)\(/);
+    if (!methodMatch) break;
+    
+    const method = methodMatch[1];
+    let argsStart = method.length + 1; // Após "método("
+    
+    // Encontrar o fechamento correspondente do parênteses
+    let depth = 1;
+    let i = argsStart;
+    let inString = false;
+    let stringChar = "";
+    
+    while (i < remaining.length && depth > 0) {
+      const char = remaining[i];
+      const prevChar = i > 0 ? remaining[i - 1] : "";
+      
+      // Detectar strings
+      if ((char === '"' || char === "'") && prevChar !== "\\") {
+        if (!inString) {
+          inString = true;
+          stringChar = char;
+        } else if (char === stringChar) {
+          inString = false;
+        }
+      }
+      
+      if (!inString) {
+        if (char === "(") depth++;
+        if (char === ")") depth--;
+      }
+      
+      i++;
+    }
+    
+    const argsStr = remaining.substring(argsStart, i - 1);
+    
+    // Parse argumentos
+    let args: any[] = [];
+    if (argsStr.trim()) {
+      try {
+        args = parseMongoArgs(argsStr);
+        args = args.map((arg) => convertObjectIds(arg));
+      } catch (error: any) {
+        throw new Error(`Erro ao parsear argumentos de ${method}(): ${error.message}`);
+      }
+    }
+    
+    operations.push({ method, args });
+    
+    // Avançar para próxima operação
+    remaining = remaining.substring(i).trim();
+    if (remaining.startsWith(".")) {
+      remaining = remaining.substring(1).trim();
+    }
+  }
+  
+  return operations;
+}
+
+/**
+ * Executa uma operação única (não encadeada)
+ */
+async function executeSingleOperation(
+  collection: any,
+  operation: string,
+  args: any[]
+): Promise<any> {
 
   switch (operation) {
     case "find":
