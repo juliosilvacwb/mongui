@@ -3,6 +3,7 @@ import { isAIEnabled } from "@/lib/env";
 import { generateMongoCommand, validateMongoCommand } from "@/lib/aiClient";
 import { logger } from "@/lib/logger";
 import { commandCache, generateCacheKey, simpleHash } from "@/lib/aiCache";
+import { sanitizeDocuments } from "@/lib/sanitizer";
 
 /**
  * POST - Gerar sugestão de comando MongoDB usando IA
@@ -57,14 +58,14 @@ export async function POST(request: Request) {
 
     logger.info(`Gerando comando para: "${prompt}" em ${database}.${collection}`);
 
-    // Gerar comando usando IA
+    // Gerar comando usando IA (com documentos sanitizados)
     const suggestion = await generateMongoCommand(prompt, {
       database,
       collection,
       schema,
       indexes,
       availableCollections,
-      sampleDocuments,
+      sampleDocuments: sanitizeDocuments(sampleDocuments || []),
     });
 
     // Validar comando gerado

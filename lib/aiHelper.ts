@@ -4,6 +4,7 @@
  */
 
 import { logger } from "./logger";
+import { sanitizeDocuments } from "./sanitizer";
 
 /**
  * Buscar contexto completo para sugestão de comando
@@ -29,7 +30,7 @@ export async function fetchFullContext(
         schema: result.data.validationSchema,
         indexes: result.data.indexes || [],
         availableCollections: result.data.availableCollections || [],
-        sampleDocuments: result.data.sampleDocuments || [],
+        sampleDocuments: sanitizeDocuments(result.data.sampleDocuments || []),
         fieldAnalysis: result.data.fieldAnalysis || {},
       };
     } else {
@@ -74,7 +75,10 @@ export async function requestAICommand(
         prompt,
         database,
         collection,
-        ...fullContext,
+        schema: fullContext.schema,
+        indexes: fullContext.indexes,
+        availableCollections: fullContext.availableCollections,
+        sampleDocuments: sanitizeDocuments(fullContext.sampleDocuments || []),
       }),
     });
 
