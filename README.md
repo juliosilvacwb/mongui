@@ -142,6 +142,134 @@ npm run dev
 
 ---
 
+## 🔐 AI Privacy & Security
+
+### What Data is Sent to AI Providers?
+
+**⚠️ IMPORTANT:** Data is ONLY sent to AI providers (OpenAI/Groq) when you **explicitly request** AI assistance by clicking the ✨ button or pressing `Ctrl+Space`. If you don't use the AI assistant, **no data is ever sent** to external services.
+
+When you request an AI suggestion, the following information is sent:
+
+| Information Type | Example | Criticality | Sent to AI? |
+|------------------|---------|-------------|-------------|
+| **Your Prompt** | "find active users" | 🟢 Low | ✅ Yes (user input) |
+| **Database Name** | `ecommerce` | 🟡 Medium | ✅ Yes (required for context) |
+| **Collection Name** | `users` | 🟡 Medium | ✅ Yes (required for context) |
+| **Schema Structure** | Field names and types | 🟡 Medium | ✅ Yes (helps AI understand data) |
+| **Index Information** | Index names and fields | 🟡 Medium | ✅ Yes (for performance tips) |
+| **Collection List** | Available collections | 🟡 Medium | ✅ Yes (for JOIN suggestions) |
+| **Sample Documents** | 1 example document | 🔴 **HIGH** | ✅ Yes - **SANITIZED** |
+
+### 🛡️ Security Implementation: Data Sanitization
+
+To protect your sensitive data, **all sample documents are automatically sanitized** before being sent to AI providers. Real values are replaced with realistic fictional data.
+
+#### Example of Data Sanitization:
+
+**BEFORE Sanitization (Real Data - NEVER SENT):**
+```json
+{
+  "_id": "507f191e810c19729de860ea",
+  "name": "João Silva",
+  "email": "joao.silva@empresa.com.br",
+  "cpf": "123.456.789-00",
+  "phone": "+55 11 99999-8888",
+  "password": "minhaSenha123",
+  "salary": 15000.00,
+  "address": "Rua Confidencial, 456",
+  "token": "abc123xyz789",
+  "ip": "201.45.123.98"
+}
+```
+
+**AFTER Sanitization (Fictional Data - SAFE TO SEND):**
+```json
+{
+  "_id": { "$oid": "507f1f77bcf86cd799439011" },
+  "name": "Usuario Exemplo",
+  "email": "usuario@example.com",
+  "cpf": "123.456.789-00",
+  "phone": "+55 11 98765-4321",
+  "password": "***REDACTED***",
+  "salary": 3.14,
+  "address": "Rua Exemplo, 123",
+  "token": "***REDACTED***",
+  "ip": "192.168.1.1"
+}
+```
+
+### 🔒 Automatic Field Detection
+
+The sanitization system automatically detects and protects sensitive fields:
+
+| Field Type | Detected Patterns | Replacement Value |
+|------------|-------------------|-------------------|
+| **Emails** | `email`, `@` pattern | `usuario@example.com` |
+| **Passwords** | `password`, `senha`, `token`, `secret`, `key` | `***REDACTED***` |
+| **Phones** | `phone`, `tel`, `celular` | `+55 11 98765-4321` |
+| **CPF/CNPJ** | `cpf`, `cnpj`, `rg` | `123.456.789-00` |
+| **Addresses** | `address`, `endereco`, `rua` | `Rua Exemplo, 123` |
+| **Names** | `name`, `nome` | `Usuario Exemplo` |
+| **IPs** | IP format pattern | `192.168.1.1` |
+| **UUIDs** | UUID format | `550e8400-e29b-41d4-a716-446655440000` |
+| **URLs** | `url`, `link`, `http` | `https://example.com/resource` |
+| **Dates** | ISO date format | `2024-01-15T10:30:00.000Z` |
+| **Numbers** | All numeric values | `42` (integers) or `3.14` (floats) |
+
+### ✅ Security Guarantees
+
+- ✅ **No data sent without your action** - AI is opt-in only
+- ✅ **Automatic sanitization** - All sample documents are cleaned
+- ✅ **Only 1 sample document** - Minimal data exposure
+- ✅ **Recursive protection** - Nested objects are also sanitized
+- ✅ **Pattern-based detection** - Smart field recognition
+- ✅ **No credentials stored** - API keys only in `.env.local`
+- ✅ **Local caching** - Repeated prompts don't resend data
+
+### 🎯 What AI Providers See
+
+AI providers (OpenAI/Groq) receive:
+1. Your natural language prompt
+2. Database and collection names
+3. Schema structure (field names and types)
+4. Index information
+5. **ONE sanitized sample document with fictional values**
+
+They **NEVER** receive:
+- ❌ Real document content
+- ❌ Passwords or tokens
+- ❌ Personal information (emails, phones, addresses)
+- ❌ Financial data
+- ❌ Any sensitive field values
+
+### 📊 Privacy Impact Assessment
+
+| Concern | Risk Level | Mitigation |
+|---------|------------|------------|
+| Personal data exposure | 🔴 High | ✅ Automatic sanitization |
+| Database structure disclosure | 🟡 Medium | ⚠️ Acceptable (needed for context) |
+| Query pattern analysis | 🟢 Low | ✅ Cached queries reduce exposure |
+| API key leakage | 🔴 High | ✅ Stored in `.env.local` (not committed) |
+
+### 🔐 Best Practices
+
+1. ✅ **Review prompts** - Don't include sensitive data in your prompts
+2. ✅ **Use Groq for testing** - Free tier for development
+3. ✅ **Monitor API usage** - Check your AI provider dashboard
+4. ✅ **Keep API keys secure** - Never commit `.env.local`
+5. ✅ **Disable AI if not needed** - Just don't configure API keys
+6. ⚠️ **Be aware** - Even sanitized structure reveals your data model
+
+### 📝 Implementation Details
+
+The sanitization system is implemented in `lib/sanitizer.ts` and automatically applies to:
+- `lib/aiHelper.ts` - When fetching context
+- `app/api/ai/suggest-command/route.ts` - Before sending to AI
+
+**No configuration needed** - sanitization is always active when using AI features.
+
+---
+
 ## 🐳 MongoDB with Docker (For Testing)
 
 ### Option 1: Docker Run (Quick Start)

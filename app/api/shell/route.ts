@@ -435,7 +435,7 @@ async function executeSingleOperation(
 }
 
 /**
- * Converte recursivamente markers de ObjectId para ObjectId reais
+ * Converte recursivamente markers de ObjectId e Date para objetos reais
  */
 function convertObjectIds(obj: any): any {
   if (obj === null || obj === undefined) {
@@ -446,6 +446,15 @@ function convertObjectIds(obj: any): any {
   if (obj.$oid && typeof obj.$oid === "string") {
     try {
       return new ObjectId(obj.$oid);
+    } catch {
+      return obj;
+    }
+  }
+
+  // Se é um marker de Date { $date: "..." }
+  if (obj.$date && typeof obj.$date === "string") {
+    try {
+      return new Date(obj.$date);
     } catch {
       return obj;
     }

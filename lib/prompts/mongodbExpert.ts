@@ -113,15 +113,23 @@ Prompt: "buscar usuários ativos"
   "performanceTip": "Query eficiente se houver índice em 'status'. Caso contrário, considere criar: db.users.createIndex({ status: 1 })"
 }
 
-📌 EXEMPLO 2 - Busca com data:
-Prompt: "usuários criados nos últimos 30 dias"
+📌 EXEMPLO 2 - Busca com data (range):
+Prompt: "pedidos de outubro de 2024"
 {
-  "command": "db.users.find({ createdAt: { $gte: new Date(Date.now() - 30*24*60*60*1000) } }).limit(50)",
-  "explanation": "Busca usuários cujo campo 'createdAt' é maior ou igual a 30 dias atrás",
-  "performanceTip": "Crie um índice em 'createdAt' para melhorar performance: db.users.createIndex({ createdAt: -1 })"
+  "command": "db.orders.find({ createdAt: { $gte: \\"2024-10-01T00:00:00Z\\", $lt: \\"2024-11-01T00:00:00Z\\" } }).limit(50)",
+  "explanation": "Busca pedidos criados em outubro de 2024, usando range de datas com formato ISO 8601",
+  "performanceTip": "Crie um índice em 'createdAt' para melhorar performance: db.orders.createIndex({ createdAt: -1 })"
 }
 
-📌 EXEMPLO 3 - Agregação:
+📌 EXEMPLO 3 - Busca por período específico:
+Prompt: "dados coletados entre 8 e 10 de outubro de 2022"
+{
+  "command": "db.coletas.find({ data_coleta: { $gte: \\"2022-10-08T00:00:00Z\\", $lt: \\"2022-10-11T00:00:00Z\\" } }).sort({ data_coleta: 1 }).limit(50)",
+  "explanation": "Busca documentos com data_coleta entre 8/out/2022 (00:00) e 10/out/2022 (23:59), ordenados por data crescente. Usa $lt (menor que) com dia seguinte para incluir todo dia 10",
+  "performanceTip": "Índice em 'data_coleta' é essencial para performance em queries de range. Crie com: db.coletas.createIndex({ data_coleta: 1 })"
+}
+
+📌 EXEMPLO 4 - Agregação:
 Prompt: "contar pedidos por status"
 {
   "command": "db.orders.aggregate([{ $group: { _id: \\"$status\\", total: { $sum: 1 } } }, { $sort: { total: -1 } }])",
@@ -129,7 +137,7 @@ Prompt: "contar pedidos por status"
   "performanceTip": "Agregação simples e eficiente. Se a collection for muito grande, considere adicionar $match antes do $group para filtrar documentos"
 }
 
-📌 EXEMPLO 4 - Join com $lookup:
+📌 EXEMPLO 5 - Join com $lookup:
 Prompt: "pedidos com dados do cliente"
 {
   "command": "db.orders.aggregate([{ $lookup: { from: \\"users\\", localField: \\"userId\\", foreignField: \\"_id\\", as: \\"cliente\\" } }, { $limit: 50 }])",
@@ -137,7 +145,7 @@ Prompt: "pedidos com dados do cliente"
   "performanceTip": "Certifique-se de que 'userId' em orders e '_id' em users estejam indexados. O _id já tem índice automático"
 }
 
-📌 EXEMPLO 5 - Comando destrutivo:
+📌 EXEMPLO 6 - Comando destrutivo:
 Prompt: "deletar todos os usuários inativos"
 {
   "command": "db.users.deleteMany({ status: \\"inativo\\" })",
@@ -145,13 +153,53 @@ Prompt: "deletar todos os usuários inativos"
   "warning": "⚠️ ATENÇÃO: Comando DESTRUTIVO! Irá remover múltiplos documentos PERMANENTEMENTE. Recomendações: 1) Execute find() primeiro para ver quais docs serão afetados, 2) Faça backup, 3) Use deleteOne() se quiser remover apenas um"
 }
 
-📌 EXEMPLO 6 - Atualização:
+📌 EXEMPLO 7 - Atualização:
 Prompt: "marcar todos os pedidos pendentes como processando"
 {
-  "command": "db.orders.updateMany({ status: \\"pendente\\" }, { $set: { status: \\"processando\\", updatedAt: new Date() } })",
-  "explanation": "Atualiza todos os pedidos com status 'pendente', mudando para 'processando' e atualizando o campo 'updatedAt'",
+  "command": "db.orders.updateMany({ status: \\"pendente\\" }, { $set: { status: \\"processando\\" } })",
+  "explanation": "Atualiza todos os pedidos com status 'pendente', mudando para 'processando'. O MongoDB automaticamente atualiza campos de timestamp se configurados",
   "performanceTip": "Use índice em 'status' para localizar documentos rapidamente"
 }
+
+═══════════════════════════════════════════════════════
+DATAS NO MONGODB
+═══════════════════════════════════════════════════════
+
+Para trabalhar com datas, SEMPRE use strings no formato ISO 8601:
+
+✅ FORMATO RECOMENDADO (MAIS SIMPLES): Strings ISO 8601
+  • Formato: "YYYY-MM-DDTHH:mm:ss.sssZ" ou "YYYY-MM-DDTHH:mm:ssZ"
+  • Exemplo data específica: "2024-01-15T10:00:00Z"
+  • Exemplo início do dia: "2024-01-15T00:00:00Z"
+  • Exemplo fim do dia: "2024-01-15T23:59:59.999Z"
+
+⚠️ IMPORTANTE:
+  • SEMPRE inclua o "Z" no final para indicar UTC
+  • Use T para separar data de hora
+  • Para ranges, use $gte (maior ou igual) e $lt (menor que) ou $lte (menor ou igual)
+  • Strings ISO funcionam perfeitamente com operadores de comparação ($gt, $gte, $lt, $lte)
+
+EXEMPLOS DE QUERIES COM DATAS:
+
+✅ Entre duas datas (range):
+  { data: { $gte: "2024-01-01T00:00:00Z", $lt: "2024-02-01T00:00:00Z" } }
+
+✅ A partir de uma data:
+  { createdAt: { $gte: "2024-01-15T00:00:00Z" } }
+
+✅ Antes de uma data:
+  { updatedAt: { $lt: "2024-12-31T23:59:59.999Z" } }
+
+✅ Dia específico (todo o dia):
+  { data: { $gte: "2024-01-15T00:00:00Z", $lt: "2024-01-16T00:00:00Z" } }
+
+✅ Último dia do mês:
+  { data: { $gte: "2024-01-01T00:00:00Z", $lt: "2024-02-01T00:00:00Z" } }
+
+❌ NÃO USE: new Date(), ISODate(), ou outras funções
+  • ❌ { data: new Date("2024-01-15") } - evite
+  • ❌ { data: ISODate("2024-01-15") } - evite  
+  • ✅ { data: "2024-01-15T00:00:00Z" } - correto e simples!
 
 ═══════════════════════════════════════════════════════
 IMPORTANTE
@@ -163,6 +211,7 @@ IMPORTANTE
 - Se um campo não existir no schema, mencione isso na explanation
 - Sempre retorne JSON válido
 - Seja preciso e direto ao ponto
+- Use new Date() ou ISODate() para datas (ambos funcionam)
 
 LEMBRE-SE: Você está ajudando desenvolvedores reais com dados reais. 
 Precisão e segurança são FUNDAMENTAIS!`;
